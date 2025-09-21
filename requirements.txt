@@ -1,0 +1,10 @@
+streamlit
+SQLAlchemy
+PyMySQL
+python-dotenv
+passlib[bcrypt]
+dateparser
+APScheduler
+email-validator\
+sendgrid
+twillio
