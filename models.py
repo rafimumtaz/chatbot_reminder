@@ -1,22 +1,38 @@
-from sqlalchemy.orm import declarative_base, relationship
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Date, Time, Enum, ForeignKey, Text
+from sqlalchemy.orm import relationship
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, Date, Time, Enum, ForeignKey, Text, UniqueConstraint
 import enum
-from database import Base
+# PASTIKAN Base diimpor dari database.py, bukan didefinisikan di sini.
+from database import Base 
 
-Base = declarative_base()
+# HAPUS BARIS INI: Base = declarative_base()
 
+
+# --- ENUMS ---
 class StatusKirim(enum.Enum):
     terkirim = "terkirim"
     gagal = "gagal"
 
 class MetodeNotif(enum.Enum):
     email = "email"
-    
 
+# PERBAIKAN: Gunakan huruf kecil penuh untuk konsistensi database
+class Hari(enum.Enum):
+    senin = "senin"
+    selasa = "selasa"
+    rabu = "rabu"
+    kamis = "kamis"
+    jumat = "jumat"
+    sabtu = "sabtu"
+    minggu = "minggu"
+    
+# --- CORE MODELS ---
 class Peran(Base):
     __tablename__ = "peran"
     id_peran = Column(Integer, primary_key=True, autoincrement=True)
     nama_peran = Column(String(50), nullable=False)
+    
+    # Relationship yang benar untuk mencegah error "Mapper... tidak memiliki properti 'pengguna'"
+    pengguna = relationship("Pengguna", back_populates="peran")
 
 class Pengguna(Base):
     __tablename__ = "pengguna"
@@ -24,23 +40,48 @@ class Pengguna(Base):
     id_peran = Column(Integer, ForeignKey("peran.id_peran"))
     nama_lengkap = Column(String(255), nullable=False)
     email = Column(String(255), unique=True, nullable=False)
-    kata_sandi_hash = Column(String(255), nullable=True) # Dibuat nullable=True untuk Google Login
-    
-    
-    # Tambahkan kolom 'verifikasi_email' di sini
+    kata_sandi_hash = Column(String(255), nullable=True) 
     verifikasi_email = Column(Boolean, default=False)
+    
+    # Relationships
+    peran = relationship("Peran", back_populates="pengguna") # Harus cocok dengan nama di model Peran
+    pengingat_dibuat = relationship("Pengingat", back_populates="pembuat")
+    anggota_kelas = relationship("AnggotaKelas", back_populates="pengguna")
+    jadwal = relationship("JadwalPelajaran", back_populates="pengguna") # Menambahkan back_populates untuk Jadwal
 
 class Kelas(Base):
     __tablename__ = "kelas"
     id_kelas = Column(Integer, primary_key=True, autoincrement=True)
+    id_pembuat = Column(Integer, ForeignKey("pengguna.id_pengguna"), nullable=False) 
+    kode_kelas = Column(String(10), unique=True, nullable=False, index=True) 
     nama_kelas = Column(String(100), nullable=False)
     deskripsi = Column(Text)
-
+    
+    # Relationships
+    pembuat = relationship("Pengguna", foreign_keys=[id_pembuat])
+    anggota = relationship("AnggotaKelas", back_populates="kelas", cascade="all, delete-orphan")
+    
 class AnggotaKelas(Base):
     __tablename__ = "anggota_kelas"
     id_anggota_kelas = Column(Integer, primary_key=True, autoincrement=True)
     id_kelas = Column(Integer, ForeignKey("kelas.id_kelas"), nullable=False)
     id_pengguna = Column(Integer, ForeignKey("pengguna.id_pengguna"), nullable=False)
+    
+    kelas = relationship("Kelas", back_populates="anggota")
+    pengguna = relationship("Pengguna", back_populates="anggota_kelas")
+    
+    __table_args__ = (UniqueConstraint('id_kelas', 'id_pengguna', name='_kelas_anggota_uc'),)
+
+class JadwalPelajaran(Base):
+    __tablename__ = "jadwal_pelajaran"
+    id_jadwal = Column(Integer, primary_key=True, autoincrement=True)
+    id_pengguna = Column(Integer, ForeignKey("pengguna.id_pengguna"), nullable=False)
+    hari = Column(Enum(Hari), nullable=False)
+    nama_pelajaran = Column(String(100), nullable=False)
+    jam_mulai = Column(Time, nullable=False)
+    jam_selesai = Column(Time, nullable=False)
+
+    pengguna = relationship("Pengguna", back_populates="jadwal") # Mengubah backref menjadi back_populates
 
 class Pengingat(Base):
     __tablename__ = "pengingat"
@@ -56,6 +97,8 @@ class Pengingat(Base):
     status_pengiriman = Column(Enum(StatusKirim), default=StatusKirim.terkirim)
     dibuat_pada = Column(DateTime)
     diubah_pada = Column(DateTime)
+    
+    pembuat = relationship("Pengguna", back_populates="pengingat_dibuat", foreign_keys=[id_pembuat])
 
 class PenerimaPengingat(Base):
     __tablename__ = "penerima_pengingat"
@@ -63,6 +106,8 @@ class PenerimaPengingat(Base):
     id_pengingat = Column(Integer, ForeignKey("pengingat.id_pengingat"), nullable=False)
     id_pengguna = Column(Integer, ForeignKey("pengguna.id_pengguna"), nullable=False)
     status_pengiriman = Column(Enum(StatusKirim), default=StatusKirim.terkirim)
+
+# --- MODEL LAINNYA (Dibiarkan tidak berubah) ---
 
 class LampiranPengingat(Base):
     __tablename__ = "lampiran_pengingat"

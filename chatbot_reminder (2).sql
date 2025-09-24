@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Waktu pembuatan: 16 Sep 2025 pada 16.23
+-- Waktu pembuatan: 24 Sep 2025 pada 15.41
 -- Versi server: 10.4.32-MariaDB
 -- Versi PHP: 8.2.12
 
@@ -33,6 +33,14 @@ CREATE TABLE `anggota_kelas` (
   `id_pengguna` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data untuk tabel `anggota_kelas`
+--
+
+INSERT INTO `anggota_kelas` (`id_anggota_kelas`, `id_kelas`, `id_pengguna`) VALUES
+(4, 1, 1),
+(1, 1, 2);
+
 -- --------------------------------------------------------
 
 --
@@ -48,14 +56,48 @@ CREATE TABLE `arsip_pengingat` (
 -- --------------------------------------------------------
 
 --
+-- Struktur dari tabel `jadwal_pelajaran`
+--
+
+CREATE TABLE `jadwal_pelajaran` (
+  `id_jadwal` int(11) NOT NULL,
+  `id_pengguna` int(11) NOT NULL,
+  `hari` enum('senin','selasa','rabu','kamis','jumat','sabtu','minggu') NOT NULL,
+  `nama_pelajaran` varchar(100) NOT NULL,
+  `jam_mulai` time NOT NULL,
+  `jam_selesai` time NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data untuk tabel `jadwal_pelajaran`
+--
+
+INSERT INTO `jadwal_pelajaran` (`id_jadwal`, `id_pengguna`, `hari`, `nama_pelajaran`, `jam_mulai`, `jam_selesai`) VALUES
+(5, 2, 'senin', 'Matematika', '08:00:00', '09:00:00'),
+(7, 2, 'senin', 'matematika', '08:00:00', '09:00:00'),
+(8, 2, 'rabu', 'ipa', '08:00:00', '09:00:00'),
+(9, 2, 'jumat', 'ipa', '08:00:00', '09:00:00');
+
+-- --------------------------------------------------------
+
+--
 -- Struktur dari tabel `kelas`
 --
 
 CREATE TABLE `kelas` (
   `id_kelas` int(11) NOT NULL,
   `nama_kelas` varchar(100) NOT NULL,
-  `deskripsi` text DEFAULT NULL
+  `deskripsi` text DEFAULT NULL,
+  `id_pembuat` int(11) NOT NULL,
+  `kode_kelas` varchar(10) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data untuk tabel `kelas`
+--
+
+INSERT INTO `kelas` (`id_kelas`, `nama_kelas`, `deskripsi`, `id_pembuat`, `kode_kelas`) VALUES
+(1, '11-9', 'kelas gacor', 2, 'BE7718');
 
 -- --------------------------------------------------------
 
@@ -89,34 +131,40 @@ CREATE TABLE `notifikasi` (
 --
 
 INSERT INTO `notifikasi` (`id_notifikasi`, `id_pengguna`, `id_pengingat`, `metode`, `waktu_kirim`, `status`) VALUES
-(1, 1, 1, 'email', '2025-09-13 15:56:53', 'gagal'),
-(2, 1, 2, 'email', '2025-09-13 15:56:53', 'gagal'),
-(3, 1, 3, 'email', '2025-09-13 15:56:53', 'gagal'),
-(4, 1, 4, 'email', '2025-09-13 15:56:54', 'gagal'),
-(5, 1, 5, 'email', '2025-09-13 15:56:54', 'gagal'),
-(6, 1, 6, 'email', '2025-09-13 15:56:54', 'gagal'),
-(7, 1, 7, 'email', '2025-09-13 15:56:54', 'gagal'),
-(8, 1, 8, 'email', '2025-09-13 15:56:54', 'gagal'),
-(9, 1, 9, 'email', '2025-09-13 15:56:54', 'gagal'),
-(10, 1, 16, 'email', '2025-09-13 15:56:54', 'gagal'),
-(11, 1, 17, 'email', '2025-09-13 15:56:54', 'gagal'),
-(12, 1, 18, 'email', '2025-09-13 15:56:54', 'gagal'),
-(13, 1, 19, 'email', '2025-09-13 16:02:13', 'gagal'),
-(14, 1, 10, 'email', '2025-09-13 16:26:10', 'terkirim'),
-(15, 1, 11, 'email', '2025-09-13 16:26:13', 'terkirim'),
-(16, 1, 12, 'email', '2025-09-13 16:26:14', 'terkirim'),
-(17, 1, 13, 'email', '2025-09-13 16:26:16', 'terkirim'),
-(18, 1, 14, 'email', '2025-09-13 16:26:18', 'terkirim'),
-(19, 1, 15, 'email', '2025-09-13 16:26:21', 'terkirim'),
-(20, 1, 20, 'email', '2025-09-13 16:42:15', 'terkirim'),
-(21, 1, 21, 'email', '2025-09-13 16:47:20', 'terkirim'),
-(22, 1, 22, 'email', '2025-09-13 16:55:33', 'terkirim'),
-(23, 1, 23, 'email', '2025-09-13 16:55:35', 'terkirim'),
-(24, 1, 24, 'email', '2025-09-13 16:55:37', 'terkirim'),
-(25, 1, 25, 'email', '2025-09-15 16:28:55', 'terkirim'),
 (26, 2, 26, 'email', '2025-09-15 23:07:27', 'terkirim'),
 (27, 2, 28, 'email', '2025-09-16 00:08:34', 'terkirim'),
-(28, 2, 27, 'email', '2025-09-16 00:09:37', 'terkirim');
+(28, 2, 27, 'email', '2025-09-16 00:09:37', 'terkirim'),
+(29, 3, 29, 'email', '2025-09-17 10:27:25', 'terkirim'),
+(30, 3, 30, 'email', '2025-09-17 10:34:28', 'terkirim'),
+(32, 2, 31, 'email', '2025-09-24 20:06:28', 'terkirim'),
+(34, 2, 32, 'email', '2025-09-24 20:20:33', 'terkirim'),
+(35, 1, 1, 'email', '2025-09-24 20:38:38', 'terkirim'),
+(36, 1, 2, 'email', '2025-09-24 20:38:38', 'terkirim'),
+(37, 1, 3, 'email', '2025-09-24 20:38:40', 'terkirim'),
+(38, 1, 4, 'email', '2025-09-24 20:38:41', 'terkirim'),
+(39, 1, 5, 'email', '2025-09-24 20:38:41', 'terkirim'),
+(40, 1, 6, 'email', '2025-09-24 20:38:42', 'terkirim'),
+(41, 1, 7, 'email', '2025-09-24 20:38:43', 'terkirim'),
+(42, 1, 8, 'email', '2025-09-24 20:38:44', 'terkirim'),
+(43, 1, 9, 'email', '2025-09-24 20:38:44', 'terkirim'),
+(44, 1, 10, 'email', '2025-09-24 20:38:45', 'terkirim'),
+(45, 1, 11, 'email', '2025-09-24 20:38:46', 'terkirim'),
+(46, 1, 12, 'email', '2025-09-24 20:38:47', 'terkirim'),
+(47, 1, 13, 'email', '2025-09-24 20:38:47', 'terkirim'),
+(48, 1, 14, 'email', '2025-09-24 20:38:48', 'terkirim'),
+(49, 1, 15, 'email', '2025-09-24 20:38:49', 'terkirim'),
+(50, 1, 16, 'email', '2025-09-24 20:38:50', 'terkirim'),
+(51, 1, 17, 'email', '2025-09-24 20:38:50', 'terkirim'),
+(52, 1, 18, 'email', '2025-09-24 20:38:51', 'terkirim'),
+(53, 1, 19, 'email', '2025-09-24 20:38:52', 'terkirim'),
+(54, 1, 20, 'email', '2025-09-24 20:38:52', 'terkirim'),
+(55, 1, 21, 'email', '2025-09-24 20:38:53', 'terkirim'),
+(56, 1, 22, 'email', '2025-09-24 20:38:54', 'terkirim'),
+(57, 1, 23, 'email', '2025-09-24 20:39:02', 'terkirim'),
+(58, 1, 24, 'email', '2025-09-24 20:39:11', 'terkirim'),
+(59, 1, 25, 'email', '2025-09-24 20:39:20', 'terkirim'),
+(60, 1, 31, 'email', '2025-09-24 20:39:29', 'terkirim'),
+(61, 1, 32, 'email', '2025-09-24 20:39:39', 'terkirim');
 
 -- --------------------------------------------------------
 
@@ -163,7 +211,13 @@ INSERT INTO `penerima_pengingat` (`id_penerima`, `id_pengingat`, `id_pengguna`, 
 (25, 25, 1, 'terkirim'),
 (26, 26, 2, 'terkirim'),
 (27, 27, 2, 'terkirim'),
-(28, 28, 2, 'terkirim');
+(28, 28, 2, 'terkirim'),
+(29, 29, 3, 'terkirim'),
+(30, 30, 3, 'terkirim'),
+(31, 31, 1, 'terkirim'),
+(32, 31, 2, 'terkirim'),
+(33, 32, 1, 'terkirim'),
+(34, 32, 2, 'terkirim');
 
 -- --------------------------------------------------------
 
@@ -189,7 +243,8 @@ CREATE TABLE `pengguna` (
 
 INSERT INTO `pengguna` (`id_pengguna`, `id_peran`, `nama_lengkap`, `email`, `kata_sandi_hash`, `foto_profil`, `tanggal_dibuat`, `terakhir_login`, `verifikasi_email`) VALUES
 (1, 3, 'dhyos', 'drp022020@gmail.com', '$2b$12$qmxayiu0q..A01FmGtFsFOE1AF.OI5FvKMiBvES0.QSuVtAt46rlO', NULL, NULL, NULL, 0),
-(2, 3, '23-175 AHMAD DHIYAUDDIN', 'ptiutmdio@gmail.com', '$2b$12$SVyrh6dOAkKmXOOOrAU./.xOmoTqoAO4CZO1yabfLdeJvQT1CkN6y', NULL, '2025-09-15 23:05:33', NULL, 1);
+(2, 3, '23-175 AHMAD DHIYAUDDIN', 'ptiutmdio@gmail.com', '$2b$12$SVyrh6dOAkKmXOOOrAU./.xOmoTqoAO4CZO1yabfLdeJvQT1CkN6y', NULL, '2025-09-15 23:05:33', NULL, 1),
+(3, 3, 'AHMAD DHIYAUDDIN-PURE', 'dpr012020@gmail.com', NULL, NULL, '2025-09-17 10:24:49', NULL, 1);
 
 -- --------------------------------------------------------
 
@@ -244,7 +299,11 @@ INSERT INTO `pengingat` (`id_pengingat`, `id_pembuat`, `id_kelas`, `judul`, `des
 (25, 1, NULL, 'Tugas matematika jam 10', 'Ingatkan saya besok saya ada tugas matematika jam 10', 'pribadi', '2025-09-16', '10:00:00', 0, 'terkirim', NULL, NULL),
 (26, 2, NULL, 'Tugas matematika jam 10', 'Ingatkan saya besok saya ada tugas matematika jam 10', 'pribadi', '2025-09-16', '10:00:00', 0, 'terkirim', NULL, NULL),
 (27, 2, NULL, 'Menggunakan Seragam Pramuka', 'Besok saya harus menggunakan seragam pramuka', 'pribadi', '2025-09-17', '08:30:00', 0, 'terkirim', NULL, NULL),
-(28, 2, NULL, 'Mengajar Kelas Matematika', 'Mengajar kelas matematika', 'pribadi', '2024-01-26', '08:15:00', 0, 'terkirim', NULL, NULL);
+(28, 2, NULL, 'Mengajar Kelas Matematika', 'Mengajar kelas matematika', 'pribadi', '2024-01-26', '08:15:00', 0, 'terkirim', NULL, NULL),
+(29, 3, NULL, 'Menggunakan Baju Tradisional', 'Memakai baju tradisional untuk memperingati hari kemerdekaan Indonesia', 'pribadi', '2024-08-16', '00:00:00', 0, 'terkirim', NULL, NULL),
+(30, 3, NULL, 'Memakai Baju Tradisional', 'Menggunakan baju tradisional untuk memperingati hari kemerdekaan Indonesia', 'pribadi', '2025-09-18', '07:00:00', 0, 'terkirim', NULL, NULL),
+(31, 1, 1, 'Tugas Matematika', 'Tugas matematika', 'pribadi', '2025-09-25', '07:00:00', 0, 'terkirim', NULL, NULL),
+(32, 2, 1, 'Tugas IPA', 'Tugas IPA', 'pribadi', '2025-09-25', '07:00:00', 0, 'terkirim', NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -331,7 +390,11 @@ INSERT INTO `riwayat_aktivitas` (`id_aktivitas`, `id_pengguna`, `jenis_aktivitas
 (19, 1, 'tambah_pengingat', 'Chatbot: Tugas matematika jam 10', NULL),
 (20, 2, 'tambah_pengingat', 'Chatbot: Tugas matematika jam 10', NULL),
 (21, 2, 'tambah_pengingat', 'Chatbot: Menggunakan Seragam Pramuka', NULL),
-(22, 2, 'tambah_pengingat', 'Chatbot: Mengajar Kelas Matematika', NULL);
+(22, 2, 'tambah_pengingat', 'Chatbot: Mengajar Kelas Matematika', NULL),
+(23, 3, 'tambah_pengingat', 'Chatbot: Menggunakan Baju Tradisional', NULL),
+(24, 3, 'tambah_pengingat', 'Chatbot: Memakai Baju Tradisional', NULL),
+(25, 1, 'tambah_pengingat', 'Chatbot: Tugas Matematika (11-9)', NULL),
+(26, 2, 'tambah_pengingat', 'Chatbot: Tugas IPA (11-9)', NULL);
 
 -- --------------------------------------------------------
 
@@ -379,7 +442,7 @@ CREATE TABLE `tag` (
 --
 ALTER TABLE `anggota_kelas`
   ADD PRIMARY KEY (`id_anggota_kelas`),
-  ADD KEY `id_kelas` (`id_kelas`),
+  ADD UNIQUE KEY `_kelas_anggota_uc` (`id_kelas`,`id_pengguna`),
   ADD KEY `id_pengguna` (`id_pengguna`);
 
 --
@@ -390,10 +453,19 @@ ALTER TABLE `arsip_pengingat`
   ADD KEY `id_pengingat` (`id_pengingat`);
 
 --
+-- Indeks untuk tabel `jadwal_pelajaran`
+--
+ALTER TABLE `jadwal_pelajaran`
+  ADD PRIMARY KEY (`id_jadwal`),
+  ADD KEY `id_pengguna` (`id_pengguna`);
+
+--
 -- Indeks untuk tabel `kelas`
 --
 ALTER TABLE `kelas`
-  ADD PRIMARY KEY (`id_kelas`);
+  ADD PRIMARY KEY (`id_kelas`),
+  ADD UNIQUE KEY `kode_kelas` (`kode_kelas`),
+  ADD KEY `fk_kelas_pembuat` (`id_pembuat`);
 
 --
 -- Indeks untuk tabel `lampiran_pengingat`
@@ -489,7 +561,7 @@ ALTER TABLE `tag`
 -- AUTO_INCREMENT untuk tabel `anggota_kelas`
 --
 ALTER TABLE `anggota_kelas`
-  MODIFY `id_anggota_kelas` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_anggota_kelas` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT untuk tabel `arsip_pengingat`
@@ -498,10 +570,16 @@ ALTER TABLE `arsip_pengingat`
   MODIFY `id_arsip` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT untuk tabel `jadwal_pelajaran`
+--
+ALTER TABLE `jadwal_pelajaran`
+  MODIFY `id_jadwal` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+
+--
 -- AUTO_INCREMENT untuk tabel `kelas`
 --
 ALTER TABLE `kelas`
-  MODIFY `id_kelas` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_kelas` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT untuk tabel `lampiran_pengingat`
@@ -513,25 +591,25 @@ ALTER TABLE `lampiran_pengingat`
 -- AUTO_INCREMENT untuk tabel `notifikasi`
 --
 ALTER TABLE `notifikasi`
-  MODIFY `id_notifikasi` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
+  MODIFY `id_notifikasi` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=62;
 
 --
 -- AUTO_INCREMENT untuk tabel `penerima_pengingat`
 --
 ALTER TABLE `penerima_pengingat`
-  MODIFY `id_penerima` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
+  MODIFY `id_penerima` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=35;
 
 --
 -- AUTO_INCREMENT untuk tabel `pengguna`
 --
 ALTER TABLE `pengguna`
-  MODIFY `id_pengguna` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id_pengguna` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT untuk tabel `pengingat`
 --
 ALTER TABLE `pengingat`
-  MODIFY `id_pengingat` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
+  MODIFY `id_pengingat` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=33;
 
 --
 -- AUTO_INCREMENT untuk tabel `peran`
@@ -549,7 +627,7 @@ ALTER TABLE `pesan_chatbot`
 -- AUTO_INCREMENT untuk tabel `riwayat_aktivitas`
 --
 ALTER TABLE `riwayat_aktivitas`
-  MODIFY `id_aktivitas` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
+  MODIFY `id_aktivitas` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
 
 --
 -- AUTO_INCREMENT untuk tabel `riwayat_pengingat`
@@ -585,6 +663,18 @@ ALTER TABLE `anggota_kelas`
 --
 ALTER TABLE `arsip_pengingat`
   ADD CONSTRAINT `arsip_pengingat_ibfk_1` FOREIGN KEY (`id_pengingat`) REFERENCES `pengingat` (`id_pengingat`);
+
+--
+-- Ketidakleluasaan untuk tabel `jadwal_pelajaran`
+--
+ALTER TABLE `jadwal_pelajaran`
+  ADD CONSTRAINT `jadwal_pelajaran_ibfk_1` FOREIGN KEY (`id_pengguna`) REFERENCES `pengguna` (`id_pengguna`);
+
+--
+-- Ketidakleluasaan untuk tabel `kelas`
+--
+ALTER TABLE `kelas`
+  ADD CONSTRAINT `fk_kelas_pembuat` FOREIGN KEY (`id_pembuat`) REFERENCES `pengguna` (`id_pengguna`);
 
 --
 -- Ketidakleluasaan untuk tabel `lampiran_pengingat`
