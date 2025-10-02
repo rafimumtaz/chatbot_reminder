@@ -1,0 +1,39 @@
+/* style.css */
+body {
+    background-color: red !important;
+}
+/* Mengatur lebar sidebar agar lebih ramping */
+[data-testid="stSidebar"] {
+    width: 90px !important;
+}
+
+/* Menyembunyikan teks label di dalam menu secara paksa */
+[data-testid="stSidebar"] .nav-item span {
+    display: none !important;
+}
+
+/* Mengatur tombol (warna idle, ukuran tetap, ikon di tengah) */
+[data-testid="stSidebar"] .nav-link {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 60px !important;
+    height: 60px !important;
+    margin: 10px auto !important;
+    padding: 0 !important;
+    border-radius: 12px !important;
+    background-color: #e9ecef !important; /* Abu-abu terang (idle) */
+    color: #495057 !important;
+}
+
+/* Mengatur warna tombol saat di-hover atau aktif */
+[data-testid="stSidebar"] .nav-link:hover,
+[data-testid="stSidebar"] .nav-link-selected {
+    background-color: #495057 !important; /* Abu-abu gelap (aktif) */
+    color: #ffffff !important;
+}
+
+/* Mengatur ukuran ikon agar proporsional */
+[data-testid="stSidebar"] .nav-link i {
+    font-size: 24px !important;
+}

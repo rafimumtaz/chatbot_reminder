@@ -6,12 +6,14 @@ import json
 from datetime import date, time, timedelta, datetime
 import uuid
 import google.generativeai as genai
+from streamlit_option_menu import option_menu
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import Flow
 from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
 from passlib.hash import bcrypt
-from sqlalchemy.exc import IntegrityError 
+from pathlib import Path
+from sqlalchemy.exc import IntegrityError
 
 from database import SessionLocal
 # Impor model yang dibutuhkan
@@ -29,7 +31,7 @@ REDIRECT_URI = "http://localhost:8501/"
 SCOPES = ["openid", "https://www.googleapis.com/auth/userinfo.email", "https://www.googleapis.com/auth/userinfo.profile"]
 
 # ------------------------------------------------
-# --- AUTH UTILITIES --- (Ditempatkan di bagian atas)
+# --- AUTH UTILITIES ---
 # ------------------------------------------------
 
 def get_user_by_email(db, email):
@@ -38,7 +40,6 @@ def get_user_by_email(db, email):
 def create_user(db, nama, email, password=None, from_google=False):
     role = db.query(Peran).filter(Peran.nama_peran == "siswa").first()
     if not role:
-        # Perhatikan: Anda perlu memastikan tabel Peran dan data "siswa" sudah ada di DB
         role = Peran(nama_peran="siswa")
         db.add(role)
         db.commit()
@@ -97,14 +98,15 @@ def login_with_google():
     
     st.markdown(f'<a href="{auth_url}" target="_self" style="display: inline-block; padding: 10px 20px; font-size: 16px; font-weight: bold; color: white; background-color: #4285F4; text-decoration: none; border-radius: 5px;">Login dengan Google</a>', unsafe_allow_html=True)
 
+# ------------------------------------------------
 # --- CLASS MANAGEMENT UTILITIES ---
+# ------------------------------------------------
+
 def generate_class_code():
-    # Membuat kode kelas 6 karakter unik
     return str(uuid.uuid4().hex[:6]).upper()
 
 def create_new_class(db, creator_id, nama_kelas, deskripsi):
     code = generate_class_code()
-    # Pastikan kode unik
     while db.query(Kelas).filter(Kelas.kode_kelas == code).first():
         code = generate_class_code()
         
@@ -118,7 +120,6 @@ def create_new_class(db, creator_id, nama_kelas, deskripsi):
     db.commit()
     db.refresh(new_class)
     
-    # Otomatis jadikan pembuat sebagai anggota kelas
     join_class(db, creator_id, code)
     
     return True, f"Kelas **{nama_kelas}** berhasil dibuat! Kode Kelas: **{code}**"
@@ -128,7 +129,6 @@ def join_class(db, user_id, class_code):
     if not kelas:
         return False, "Kode kelas tidak valid."
         
-    # Cek apakah sudah menjadi anggota
     is_member = db.query(AnggotaKelas).filter(
         AnggotaKelas.id_kelas == kelas.id_kelas,
         AnggotaKelas.id_pengguna == user_id
@@ -149,7 +149,10 @@ def join_class(db, user_id, class_code):
         db.rollback()
         return False, "Gagal bergabung. Silakan coba lagi."
 
+# ------------------------------------------------
 # --- Gemini Integration ---
+# ------------------------------------------------
+
 def process_prompt_with_gemini(prompt):
     try:
         today = datetime.now().date()
@@ -158,21 +161,21 @@ def process_prompt_with_gemini(prompt):
         model = genai.GenerativeModel('gemini-1.5-flash')
         response = model.generate_content(
             f"""Anda adalah asisten pengingat cerdas. Tugas Anda adalah:
-             1. Menganalisis teks pengguna.
-             2. Mendeteksi judul, deskripsi, tanggal, waktu, dan jenis pengingat (contoh: 'tugas', 'rapat', 'seragam').
-             3. Jika pengguna menyebutkan tanggal relatif (misalnya: 'besok', 'minggu depan', 'hari jumat'), gunakan tanggal hari ini sebagai referensi untuk menghitung tanggal yang benar.
-             4. Tanggal hari ini adalah: {today_str}.
-             5. Jika tanggal yang diberikan adalah deadline, tentukan tanggal pengingat H-1.
-             6. Mengembalikan output dalam format JSON seperti ini:
-             {{
+              1. Menganalisis teks pengguna.
+              2. Mendeteksi judul, deskripsi, tanggal, waktu, dan jenis pengingat (contoh: 'tugas', 'rapat', 'seragam').
+              3. Jika pengguna menyebutkan tanggal relatif (misalnya: 'besok', 'minggu depan', 'hari jumat'), gunakan tanggal hari ini sebagai referensi untuk menghitung tanggal yang benar.
+              4. Tanggal hari ini adalah: {today_str}.
+              5. Jika tanggal yang diberikan adalah deadline, tentukan tanggal pengingat H-1.
+              6. Mengembalikan output dalam format JSON seperti ini:
+              {{
                 "judul": "Judul pengingat yang diperbaiki",
                 "deskripsi": "Deskripsi lengkap dari prompt",
                 "tanggal_deadline": "YYYY-MM-DD",
                 "jam_deadline": "HH:MM"
-             }}
-             Jika informasi tidak lengkap, isi dengan null. Teks untuk dianalisis:
-             {prompt}
-             """,
+              }}
+              Jika informasi tidak lengkap, isi dengan null. Teks untuk dianalisis:
+              {prompt}
+              """,
             generation_config=genai.GenerationConfig(
                 response_mime_type='application/json'
             )
@@ -183,7 +186,7 @@ def process_prompt_with_gemini(prompt):
         return None
 
 # ------------------------------------------------
-# --- UI BASE FUNCTIONS --- (Dipindahkan ke sini)
+# --- UI BASE FUNCTIONS ---
 # ------------------------------------------------
 
 def login_ui():
@@ -219,36 +222,44 @@ def register_ui():
                 create_user(db, nama, email, password)
                 st.success("Akun berhasil dibuat. Silakan login.")
 
+# --- PERBAIKAN DI SINI ---
+# Fungsi navbar disederhanakan, semua gaya dipindahkan ke CSS di main()
 def navbar():
     with st.sidebar:
-        st.write(f"Selamat datang, **{st.session_state['user_info']['name']}**!")
-        choice = st.radio("Menu", ["Chatbot", "Daftar Pengingat", "Jadwal Pelajaran", "Manajemen Kelas", "Riwayat Notifikasi", "Pengaturan Akun"]) # TAMBAHAN INI
-        if st.button("Keluar"):
-            st.session_state.clear()
-            st.rerun()
-        return choice
+        selected = option_menu(
+            menu_title=None,
+            options=[
+                "Chatbot", "Daftar Pengingat", "Jadwal Pelajaran",
+                "Manajemen Kelas", "Riwayat Notifikasi", "Pengaturan Akun", "Logout"
+            ],
+            icons=[
+                "chat-dots", "list-task", "book", "grid",
+                "clock-history", "gear", "box-arrow-right"
+            ],
+            default_index=0,
+        )
+
+    if selected == "Logout":
+        st.session_state.clear()
+        st.rerun()
+
+    return selected
 
 # ------------------------------------------------
-# --- UI PAGES --- (Ditempatkan di tengah)
+# --- UI PAGES ---
 # ------------------------------------------------
 
 def page_jadwal_pelajaran():
     user_id = st.session_state["user_info"]["user_id"]
     st.header("📚 Jadwal Pelajaran")
 
-    # Ambil data hari Enum dari model
-    hari_options = [h.value for h in Hari] # ['senin', 'selasa', ...]
+    hari_options = [h.value for h in Hari]
 
-    # Form untuk menambahkan jadwal baru
     with st.expander("➕ Tambah Jadwal Baru"):
         with st.form("form_tambah_jadwal", clear_on_submit=True):
-            # Menggunakan .capitalize() untuk tampilan yang baik
             display_hari_options = [h.capitalize() for h in hari_options]
-            hari_display = st.selectbox("Hari", display_hari_options, key="jadwal_hari_display") 
-            
-            # Mendapatkan nilai ENUM huruf kecil dari display
-            hari_input = hari_display.lower() 
-
+            hari_display = st.selectbox("Hari", display_hari_options, key="jadwal_hari_display")
+            hari_input = hari_display.lower()
             pelajaran_input = st.text_input("Nama Mata Pelajaran", key="jadwal_pelajaran")
             col1, col2 = st.columns(2)
             with col1:
@@ -261,10 +272,9 @@ def page_jadwal_pelajaran():
             if submitted:
                 if pelajaran_input:
                     with SessionLocal() as db:
-                        # Meneruskan nilai Enum yang benar (huruf kecil)
                         new_jadwal = JadwalPelajaran(
                             id_pengguna=user_id,
-                            hari=Hari(hari_input), 
+                            hari=Hari(hari_input),
                             nama_pelajaran=pelajaran_input,
                             jam_mulai=jam_mulai_input,
                             jam_selesai=jam_selesai_input
@@ -277,7 +287,6 @@ def page_jadwal_pelajaran():
                     st.error("Nama Mata Pelajaran tidak boleh kosong.")
 
     st.subheader("Jadwal Anda")
-    # Tampilkan jadwal yang sudah ada
     with SessionLocal() as db:
         jadwal_list = (
             db.query(JadwalPelajaran)
@@ -286,22 +295,18 @@ def page_jadwal_pelajaran():
             .all()
         )
         
-        # Kelompokkan jadwal berdasarkan hari
         jadwal_by_day = {h.value: [] for h in Hari}
         for j in jadwal_list:
             jadwal_by_day[j.hari.value].append(j)
 
-        # Tampilkan dalam expander per hari
-        for hari_val in hari_options: # hari_options berisi ['senin', 'selasa', ...]
+        for hari_val in hari_options:
             if jadwal_by_day[hari_val]:
-                # Menggunakan .capitalize() untuk tampilan
                 with st.expander(f"**{hari_val.capitalize()}** ({len(jadwal_by_day[hari_val])} Pelajaran)"):
                     for j in jadwal_by_day[hari_val]:
                         colA, colB, colC = st.columns([0.2, 0.6, 0.2])
                         colA.write(f"**{j.jam_mulai.strftime('%H:%M')} - {j.jam_selesai.strftime('%H:%M')}**")
                         colB.write(f"{j.nama_pelajaran}")
                         
-                        # Tombol hapus (opsional)
                         if colC.button("Hapus", key=f"del_{j.id_jadwal}"):
                             db.delete(j)
                             db.commit()
@@ -312,7 +317,6 @@ def page_kelas_management():
     user_id = st.session_state["user_info"]["user_id"]
     st.header("🏢 Manajemen Kelas")
     
-    # Bagian Membuat Kelas dan Bergabung
     tab1, tab2 = st.tabs(["Buat Kelas Baru", "Bergabung Kelas"])
 
     with tab1:
@@ -354,11 +358,9 @@ def page_kelas_management():
                     
     st.markdown("---")
     
-    # Bagian Daftar Kelas (Admin dan Anggota)
     st.subheader("Daftar Kelas Anda")
     
     with SessionLocal() as db:
-        # Kelas yang dibuat oleh pengguna (Admin/Pembuat)
         kelas_dibuat = db.query(Kelas).filter(Kelas.id_pembuat == user_id).all()
         
         if kelas_dibuat:
@@ -370,11 +372,9 @@ def page_kelas_management():
                     
                     st.markdown("##### Anggota Kelas:")
                     
-                    # Ambil daftar anggota (JOIN AnggotaKelas dan Pengguna)
                     anggota_list = db.query(Pengguna, AnggotaKelas).join(AnggotaKelas, AnggotaKelas.id_pengguna == Pengguna.id_pengguna).filter(AnggotaKelas.id_kelas == kelas.id_kelas).all()
                     
                     for pengguna, anggota in anggota_list:
-                        # Jangan tampilkan diri sendiri di daftar hapus/keluarkan
                         if pengguna.id_pengguna == user_id:
                             st.write(f"✅ **{pengguna.nama_lengkap}** ({pengguna.email}) - Anda (Pembuat)")
                             continue
@@ -382,21 +382,19 @@ def page_kelas_management():
                         colX, colY = st.columns([0.7, 0.3])
                         colX.write(f"▪️ {pengguna.nama_lengkap} ({pengguna.email})")
                         
-                        # Tombol hapus/keluarkan anggota
                         if colY.button("Keluarkan", key=f"kick_{anggota.id_anggota_kelas}"):
                             db.delete(anggota)
                             db.commit()
                             st.success(f"Anggota {pengguna.nama_lengkap} dikeluarkan.")
                             st.rerun()
                             
-        # Kelas yang diikuti pengguna (Non-Admin)
         kelas_diikuti_ids = db.query(AnggotaKelas.id_kelas).filter(
             AnggotaKelas.id_pengguna == user_id
         ).subquery()
         
         kelas_diikuti = db.query(Kelas).filter(
             Kelas.id_kelas.in_(kelas_diikuti_ids),
-            Kelas.id_pembuat != user_id # Kecualikan kelas yang dibuat sendiri
+            Kelas.id_pembuat != user_id
         ).all()
         
         if kelas_diikuti:
@@ -406,7 +404,6 @@ def page_kelas_management():
                     st.write(f"**{kelas.nama_kelas}**")
                     st.write(f"Deskripsi: {kelas.deskripsi}")
                     
-                    # Tombol Keluar Kelas
                     if st.button(f"Keluar dari Kelas", key=f"leave_{kelas.id_kelas}"):
                         anggota = db.query(AnggotaKelas).filter(
                             AnggotaKelas.id_kelas == kelas.id_kelas,
@@ -417,146 +414,111 @@ def page_kelas_management():
                             db.commit()
                             st.success(f"Anda keluar dari kelas {kelas.nama_kelas}.")
                             st.rerun()
+
 def get_user_classes(db, user_id):
-    """Mengambil daftar kelas yang dibuat atau diikuti pengguna."""
-    # Kelas yang dibuat (sebagai pembuat)
     kelas_dibuat = db.query(Kelas).filter(Kelas.id_pembuat == user_id).all()
     
-    # Kelas yang diikuti (sebagai anggota)
     kelas_diikuti_ids = db.query(AnggotaKelas.id_kelas).filter(
         AnggotaKelas.id_pengguna == user_id
     ).subquery()
     
     kelas_diikuti = db.query(Kelas).filter(
         Kelas.id_kelas.in_(kelas_diikuti_ids),
-        Kelas.id_pembuat != user_id # Hindari duplikasi
+        Kelas.id_pembuat != user_id
     ).all()
     
-    # Gabungkan dan kembalikan (menggunakan set untuk keunikan)
     all_classes = {k.id_kelas: k.nama_kelas for k in kelas_dibuat + kelas_diikuti}
     
     return all_classes
+
 def page_chatbot():
     user_id = st.session_state["user_info"]["user_id"]
-    # Ambil nama pengguna untuk personalisasi pesan error
-    user_name = st.session_state["user_info"]["name"] 
-    
-    st.header("💬 Chatbot Reminder")
-    st.write("Ketik seperti: **'ingatkan saya minggu depan saya ada tugas matematika jam 10'**")
+    user_name = st.session_state["user_info"]["name"]
+
+    st.markdown("### Apa ada tugas minggu ini? Ayo buat pengingat!")
 
     with SessionLocal() as db:
-        # Ambil daftar kelas pengguna (logika dari perbaikan sebelumnya)
         user_classes = get_user_classes(db, user_id)
-        
-        # Buat opsi Selectbox: Pribadi + Semua Kelas
         class_options = {"Pribadi": None}
         for id_kelas, nama_kelas in user_classes.items():
             class_options[nama_kelas] = id_kelas
-            
+
         selected_class_name = st.selectbox(
             "Tujuan Pengingat",
             list(class_options.keys())
         )
         selected_class_id = class_options[selected_class_name]
 
-    prompt = st.text_input("Pesan Anda")
-    
-    if st.button("Kirim") and prompt.strip():
-        with st.spinner("Memproses..."):
-            json_string = process_prompt_with_gemini(prompt)
+    prompt = st.text_input(
+        "Ketikkan tugas Anda",
+        placeholder="Ketik seperti: 'ingatkan saya minggu depan saya ada tugas matematika jam 10'"
+    )
 
-        if json_string:
-            try:
-                parsed = json.loads(json_string)
-                
-                # --- PERBAIKAN: Cek Judul Sebelum Interaksi DB ---
-                judul = parsed.get("judul")
-                if not judul or judul.lower() == 'null' or judul.strip() == "":
-                    # Tampilkan pesan error yang ramah dan petunjuk
-                    st.error(
-                        f"Maaf **{user_name}**, saya tidak dapat mengidentifikasi **judul** pengingat dari perintah Anda."
-                        f"\n\nBerikan saya perintah terkait **apa** yang perlu saya ingatkan kepada Anda, "
-                        f"misalnya: **'Tolong buatkan pengingat untuk tugas Matematika besok jam 7 pagi'** "
-                        f"atau **'Ingatkan saya rapat di hari Rabu jam 1 siang'**."
-                        f"\n\nPengingat memerlukan setidaknya Judul agar dapat disimpan."
-                    )
-                    return # Hentikan eksekusi dan tidak melanjutkan ke DB
-                # --- AKHIR PERBAIKAN ---
-
-                
-                # Mendapatkan tanggal deadline dari respons AI
-                tanggal_deadline_obj = None
-                if parsed.get("tanggal_deadline"):
-                    tanggal_deadline_obj = date.fromisoformat(parsed["tanggal_deadline"])
-                    
-                # Mengatur jam deadline atau default ke 07:00 jika 'null'
-                jam_deadline_str = parsed.get("jam_deadline")
-                jam_deadline_obj = None
-                if jam_deadline_str and jam_deadline_str.lower() != 'null':
-                    jam_deadline_obj = time.fromisoformat(jam_deadline_str)
-                else:
-                    jam_deadline_obj = time(7, 0)
-                
-                # Menghitung tanggal pengingat H-1
-                tanggal_pengingat_obj = None
-                if tanggal_deadline_obj:
-                    tanggal_pengingat_obj = tanggal_deadline_obj - timedelta(days=1)
-
-                with SessionLocal() as db:
-                    # 1. Buat entri Pengingat utama (judul dijamin ada)
-                    pengingat = Pengingat(
-                        id_pembuat=user_id,
-                        id_kelas=selected_class_id,
-                        judul=judul, # Menggunakan judul yang sudah divalidasi
-                        deskripsi=parsed.get("deskripsi"),
-                        tanggal_deadline=tanggal_deadline_obj,
-                        jam_deadline=jam_deadline_obj,
-                        tipe=parsed.get("jenis", "pribadi")
-                    )
-                    db.add(pengingat)
-                    db.commit()
-                    db.refresh(pengingat)
-
-                    # 2. Tentukan Penerima dan Buat entri PenerimaPengingat (logika sebelumnya)
-                    if selected_class_id:
-                        anggota = db.query(AnggotaKelas.id_pengguna).filter(
-                            AnggotaKelas.id_kelas == selected_class_id
-                        ).all()
-                        penerima_ids = [a[0] for a in anggota]
-                    else:
-                        penerima_ids = [user_id] 
-                    
-                    for p_id in penerima_ids:
-                        penerima = PenerimaPengingat(
-                            id_pengingat=pengingat.id_pengingat,
-                            id_pengguna=p_id
+    if st.button("➤", key="send_prompt"):
+        if prompt.strip():
+            with st.spinner("Memproses..."):
+                json_string = process_prompt_with_gemini(prompt)
+            if json_string:
+                try:
+                    parsed = json.loads(json_string)
+                    judul = parsed.get("judul")
+                    if not judul or judul.lower() == 'null' or judul.strip() == "":
+                        st.error(
+                            f"Maaf **{user_name}**, saya tidak dapat mengidentifikasi judul pengingat."
                         )
-                        db.add(penerima)
+                        return
+                    tanggal_deadline_obj = None
+                    if parsed.get("tanggal_deadline"):
+                        tanggal_deadline_obj = date.fromisoformat(parsed["tanggal_deadline"])
+                    jam_deadline_obj = time.fromisoformat(parsed["jam_deadline"]) if parsed.get("jam_deadline") else time(7, 0)
+                    tanggal_pengingat_obj = tanggal_deadline_obj - timedelta(days=1) if tanggal_deadline_obj else None
 
-                    # 3. Buat Log Aktivitas
-                    log_desc = f"Chatbot: {pengingat.judul} ({selected_class_name})"
-                    log = RiwayatAktivitas(
-                        id_pengguna=user_id,
-                        jenis_aktivitas="tambah_pengingat",
-                        deskripsi=log_desc
-                    )
-                    db.add(log)
-                    db.commit()
+                    with SessionLocal() as db:
+                        pengingat = Pengingat(
+                            id_pembuat=user_id,
+                            id_kelas=selected_class_id,
+                            judul=judul,
+                            deskripsi=parsed.get("deskripsi"),
+                            tanggal_deadline=tanggal_deadline_obj,
+                            jam_deadline=jam_deadline_obj,
+                            tipe=parsed.get("jenis", "pribadi")
+                        )
+                        db.add(pengingat)
+                        db.commit()
+                        db.refresh(pengingat)
 
-                    st.success(f"Pengingat dibuat: {pengingat.judul}\nDeadline: {pengingat.tanggal_deadline} {jam_deadline_obj}")
-                    st.info(f"Tujuan: **{selected_class_name}**. Pengingat akan dikirim pada: {tanggal_pengingat_obj}")
-            
-            except Exception as e:
-                # Catch-all untuk kesalahan teknis selain judul null
-                st.error(f"Gagal memproses respons: Terjadi kesalahan database atau teknis. ({e})")
-                st.text(f"Respons mentah dari AI: {json_string}")
+                        penerima_ids = [user_id] if not selected_class_id else [
+                            a[0] for a in db.query(AnggotaKelas.id_pengguna).filter(
+                                AnggotaKelas.id_kelas == selected_class_id
+                            ).all()
+                        ]
+                        for p_id in penerima_ids:
+                            penerima = PenerimaPengingat(
+                                id_pengingat=pengingat.id_pengingat,
+                                id_pengguna=p_id
+                            )
+                            db.add(penerima)
+
+                        log_desc = f"Chatbot: {pengingat.judul} ({selected_class_name})"
+                        log = RiwayatAktivitas(
+                            id_pengguna=user_id,
+                            jenis_aktivitas="tambah_pengingat",
+                            deskripsi=log_desc
+                        )
+                        db.add(log)
+                        db.commit()
+
+                        st.success(f"Pengingat dibuat: {pengingat.judul}")
+                        st.info(f"Tujuan: **{selected_class_name}**. Deadline: {pengingat.tanggal_deadline} {jam_deadline_obj}")
+                except Exception as e:
+                    st.error(f"Gagal memproses respons: {e}")
+                    st.text(f"Respons mentah dari AI: {json_string}")
 
 def page_list():
     user_id = st.session_state["user_info"]["user_id"]
     st.header("🗂️ Daftar Pengingat")
     
     with SessionLocal() as db:
-        # Query: Ambil Pengingat, Kelas (jika ada), dan Nama Pembuat (dari tabel Pengguna)
         items = db.query(
             Pengingat, 
             Kelas, 
@@ -569,23 +531,16 @@ def page_list():
         ).join(PenerimaPengingat, PenerimaPengingat.id_pengingat == Pengingat.id_pengingat).distinct().order_by(Pengingat.dibuat_pada.desc()).all()
 
 
-        for i, (pengingat, kelas, pembuat_nama) in enumerate(items): 
-            
-            # 1. Tentukan Label: Hanya tampilkan Pembuat jika tipe Kelas
+        for i, (pengingat, kelas, pembuat_nama) in enumerate(items):
             label = "Pribadi"
             if kelas:
-                # Jika ada kelas, tampilkan nama kelas dan nama pembuat
                 label = f"{kelas.nama_kelas} (Oleh: {pembuat_nama})"
             
-            # Format header expander
             label_header = f"[{label}] {pengingat.judul} | {pengingat.tanggal_deadline} {pengingat.jam_deadline.strftime('%H:%M')}"
             
-            # Kunci unik untuk widget
-            unique_base_key = f"{pengingat.id_pengingat}_{i}" 
+            unique_base_key = f"{pengingat.id_pengingat}_{i}"
             
             with st.expander(label_header):
-                
-                # Widget Edit
                 st.subheader("Edit Pengingat")
                 
                 new_title = st.text_input(f"Judul", pengingat.judul, key=f"title_{unique_base_key}")
@@ -605,8 +560,7 @@ def page_list():
                         key=f"time_{unique_base_key}"
                     )
                 
-                # 2. Tombol Simpan dan Hapus Bersebelahan
-                col_save, col_delete = st.columns([1, 1]) 
+                col_save, col_delete = st.columns([1, 1])
                 
                 with col_save:
                     if st.button(f"Simpan Perubahan", key=f"save_{unique_base_key}"):
@@ -616,25 +570,21 @@ def page_list():
                         pengingat.jam_deadline = new_time
                         db.commit()
                         st.success("Perubahan berhasil disimpan.")
-                        st.rerun() 
+                        st.rerun()
                 
                 with col_delete:
-                    # Pastikan tombol hapus menggunakan warna merah (type="primary") 
-                    # dan label yang jelas.
                     if st.button("Hapus Pengingat", key=f"delete_{unique_base_key}", type="primary"):
-                        # Hapus Penerima terlebih dahulu
                         db.query(PenerimaPengingat).filter(PenerimaPengingat.id_pengingat == pengingat.id_pengingat).delete()
                         
-                        # Hapus Pengingat utama
                         db.delete(pengingat)
                         db.commit()
                         st.warning(f"Pengingat '{pengingat.judul}' berhasil dihapus. Memuat ulang...")
                         st.rerun()
+
 def page_riwayat_notifikasi():
     user_id = st.session_state["user_info"]["user_id"]
     st.header("⏳ Riwayat Notifikasi")
 
-    # Tombol Hapus Riwayat di pojok kanan atas
     col_title, col_button = st.columns([0.8, 0.2])
     with col_button:
         if st.button("🧹 Hapus Riwayat", key="clear_notif_history", type="primary"):
@@ -644,14 +594,13 @@ def page_riwayat_notifikasi():
                 st.success("Riwayat notifikasi berhasil dibersihkan. Memuat ulang...")
                 st.rerun()
 
-    # Query untuk mengambil data riwayat
     with SessionLocal() as db:
         data_query = db.query(
-            Pengingat.judul.label("Judul Pengingat"),         # Index 0
-            Notifikasi.waktu_kirim.label("Waktu Kirim"),       # Index 1
-            Pengguna.email.label("Email Penerima"),           # Index 2
-            Notifikasi.metode.label("Metode"),                # Index 3
-            Notifikasi.status.label("Status")                 # Index 4
+            Pengingat.judul.label("Judul Pengingat"),
+            Notifikasi.waktu_kirim.label("Waktu Kirim"),
+            Pengguna.email.label("Email Penerima"),
+            Notifikasi.metode.label("Metode"),
+            Notifikasi.status.label("Status")
         ).join(
             Pengingat, Notifikasi.id_pengingat == Pengingat.id_pengingat
         ).join(
@@ -660,11 +609,9 @@ def page_riwayat_notifikasi():
             Notifikasi.id_pengguna == user_id
         ).order_by(Notifikasi.waktu_kirim.desc()).all()
 
-        # Format data menjadi List of Dictionaries untuk st.dataframe
         if data_query:
             riwayat_data = [
                 {
-                    # PERBAIKAN: Menggunakan Indexing (row[index]) untuk menghindari masalah nama atribut
                     "Judul Pengingat": row[0],
                     "Waktu Kirim": row[1].strftime("%Y-%m-%d %H:%M:%S"),
                     "Email Penerima": row[2],
@@ -676,9 +623,88 @@ def page_riwayat_notifikasi():
             st.dataframe(riwayat_data, use_container_width=True)
         else:
             st.info("Belum ada riwayat notifikasi yang tersimpan untuk Anda.")
-                             
+
+def page_settings():
+    user_id = st.session_state["user_info"]["user_id"]
+    st.header("⚙️ Pengaturan Akun")
+    user_info = st.session_state.get("user_info", {})
+
+    with st.container(border=True):
+        st.subheader("Ubah Nama Lengkap")
+        current_nama = user_info.get("name")
+        new_nama = st.text_input("Nama Lengkap Baru", value=current_nama, key="new_nama")
+
+        if st.button("Ubah Nama", key="change_name_btn"):
+            if not new_nama or new_nama == current_nama:
+                st.error("Nama lengkap tidak boleh kosong atau sama dengan nama sebelumnya.")
+            else:
+                success, message = update_nama(user_id, new_nama)
+                if success:
+                    st.success(message)
+                    st.session_state["user_info"]["name"] = new_nama
+                    st.rerun()
+                else:
+                    st.error(message)
+
+    with st.container(border=True):
+        st.subheader("Ubah Kata Sandi")
+        old_password = st.text_input(
+            "Kata Sandi Lama (kosongkan jika login awal dengan Google)",
+            type="password",
+            help="Kosongkan jika Anda login menggunakan Google.",
+            key="old_password"
+        )
+        new_password = st.text_input("Kata Sandi Baru", type="password", key="new_password")
+        new_password_confirm = st.text_input("Verifikasi Kata Sandi Baru", type="password", key="new_password_confirm")
+
+        if st.button("Ubah Kata Sandi", key="change_password_btn"):
+            if not new_password or new_password != new_password_confirm:
+                st.error("Kata sandi baru tidak cocok atau kosong.")
+            else:
+                success, message = update_password(
+                    st.session_state["user_info"]["user_id"],
+                    old_password,
+                    new_password
+                )
+                if success:
+                    st.success(message)
+                    st.session_state.clear()
+                    st.session_state["reset_message"] = "Kata sandi berhasil diubah. Silakan login kembali."
+                    st.rerun()
+                else:
+                    st.error(message)
+
+# ------------------------------------------------
+# --- MAIN APP ---
+# ------------------------------------------------
 def main():
     st.set_page_config(page_title="Chatbot Reminder", page_icon="⏰", layout="centered")
+
+    # --- KODE DEBUGGING UNTUK MENEMUKAN CSS ---
+    try:
+        # Menggunakan pathlib untuk path yang lebih andal
+        script_path = Path(__file__).resolve()
+        script_dir = script_path.parent
+        css_file_path = script_dir / "style.css"
+
+        # Menampilkan pesan debug di aplikasi
+        st.info(f"Mencari style.css di path: {css_file_path}")
+
+        if css_file_path.is_file():
+            st.success("File style.css berhasil ditemukan!")
+            with open(css_file_path) as f:
+                st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+        else:
+            st.warning("PERINGATAN: File style.css tidak ditemukan di path tersebut.")
+
+    except NameError:
+        # Jika __file__ tidak terdefinisi (misalnya saat dijalankan di notebook interaktif)
+        st.warning("Tidak bisa menentukan path skrip secara otomatis.")
+    except Exception as e:
+        st.error(f"Terjadi error saat mencoba memuat CSS: {e}")
+    # ---------------------------------------------
+
+    st.markdown('<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">', unsafe_allow_html=True)
     st.title("⏰ Chatbot Reminder Tugas")
 
     if "reset_message" in st.session_state:
@@ -707,7 +733,7 @@ def main():
                 if not user:
                     user = create_user(db, user_name, user_email)
                 
-                st.query_params.pop("code", None)
+                st.query_params.clear()
                 
                 st.session_state["authentication_status"] = True
                 st.session_state["user_info"] = {"name": user_name, "email": user_email, "user_id": user.id_pengguna}
@@ -715,7 +741,7 @@ def main():
 
         except Exception as e:
             st.error(f"Terjadi kesalahan saat otentikasi: {e}")
-            st.query_params.pop("code", None)
+            st.query_params.clear()
     
     if "authentication_status" not in st.session_state or st.session_state["authentication_status"] is None:
         tab1, tab2 = st.tabs(["Masuk", "Daftar"])
@@ -733,69 +759,13 @@ def main():
             page_jadwal_pelajaran()
         elif choice == "Manajemen Kelas":
             page_kelas_management()
-        elif choice == "Riwayat Notifikasi": # TAMBAHAN INI
+        elif choice == "Riwayat Notifikasi":
             page_riwayat_notifikasi()
         elif choice == "Pengaturan Akun":
             page_settings()
-
-
-def page_settings():
-    user_id = st.session_state["user_info"]["user_id"]
-    st.header("⚙️ Pengaturan Akun")
-    user_info = st.session_state.get("user_info", {})
-
-    with st.container(border=True):
-        st.subheader("Ubah Nama Lengkap")
-        current_nama = user_info.get("name")
-        new_nama = st.text_input("Nama Lengkap Baru", value=current_nama, key="new_nama")
-
-        if st.button("Ubah Nama", key="change_name_btn"):
-            if not new_nama or new_nama == current_nama:
-                st.error("Nama lengkap tidak boleh kosong atau sama dengan nama sebelumnya.")
-            else:
-                success, message = update_nama(user_id, new_nama)
-                if success:
-                    st.success(message)
-                    st.session_state["user_info"]["name"] = new_nama
-                    st.rerun()
-                else:
-                    st.error(message)
-
-    with st.container(border=True):
-        st.subheader("Ubah Kata Sandi")
-        old_password = st.text_input(
-            "Kata Sandi Lama (kosongkan jika login awal dengan Google)", 
-            type="password", 
-            help="Kosongkan jika Anda login menggunakan Google.",
-            key="old_password"
-        )
-        new_password = st.text_input("Kata Sandi Baru", type="password", key="new_password")
-        new_password_confirm = st.text_input("Verifikasi Kata Sandi Baru", type="password", key="new_password_confirm")
-
-        if st.button("Ubah Kata Sandi", key="change_password_btn"):
-            if not new_password or new_password != new_password_confirm:
-                st.error("Kata sandi baru tidak cocok atau kosong.")
-            else:
-                success, message = update_password(
-                    st.session_state["user_info"]["user_id"],
-                    old_password,
-                    new_password
-                )
-                if success:
-                    st.success(message)
-                    st.session_state.clear()
-                    st.session_state["reset_message"] = "Kata sandi berhasil diubah. Silakan login kembali."
-                    st.rerun()
-                else:
-                    st.error(message)
-
-
 
 if __name__ == "__main__":
     if not os.path.exists("client_secrets.json"):
         st.error("File 'client_secrets.json' tidak ditemukan. Pastikan Anda telah mengunduhnya dari Google Cloud Console.")
     else:
-        # Panggil main setelah semua fungsi didefinisikan
         main()
-
-
