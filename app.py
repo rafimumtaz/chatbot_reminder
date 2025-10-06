@@ -680,23 +680,11 @@ def page_settings():
 def main():
     st.set_page_config(page_title="Chatbot Reminder", page_icon="⏰", layout="centered")
 
-    # --- KODE DEBUGGING UNTUK MENEMUKAN CSS ---
     try:
         # Menggunakan pathlib untuk path yang lebih andal
         script_path = Path(__file__).resolve()
         script_dir = script_path.parent
         css_file_path = script_dir / "style.css"
-
-        # Menampilkan pesan debug di aplikasi
-        st.info(f"Mencari style.css di path: {css_file_path}")
-
-        if css_file_path.is_file():
-            st.success("File style.css berhasil ditemukan!")
-            with open(css_file_path) as f:
-                st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
-        else:
-            st.warning("PERINGATAN: File style.css tidak ditemukan di path tersebut.")
-
     except NameError:
         # Jika __file__ tidak terdefinisi (misalnya saat dijalankan di notebook interaktif)
         st.warning("Tidak bisa menentukan path skrip secara otomatis.")
