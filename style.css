@@ -1,39 +1,151 @@
 /* style.css */
+
+/* --- General App Styling --- */
+/* Menghilangkan header dan footer bawaan Streamlit */
+header, footer {
+    visibility: hidden !important;
+}
+
+/* Mengatur warna latar belakang utama */
 body {
-    background-color: red !important;
+    background-color: #FFFFFF;
 }
-/* Mengatur lebar sidebar agar lebih ramping */
+
+/* --- Custom Sidebar --- */
+/* Mengubah tampilan sidebar bawaan */
 [data-testid="stSidebar"] {
-    width: 90px !important;
+    background-color: #F0F2F6;
+    border-right: none;
+    padding: 20px 10px;
 }
 
-/* Menyembunyikan teks label di dalam menu secara paksa */
-[data-testid="stSidebar"] .nav-item span {
-    display: none !important;
+/* Menghilangkan padding atas dari konten sidebar */
+[data-testid="stSidebar"] > div:first-child {
+    padding-top: 0;
 }
 
-/* Mengatur tombol (warna idle, ukuran tetap, ikon di tengah) */
-[data-testid="stSidebar"] .nav-link {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    width: 60px !important;
-    height: 60px !important;
-    margin: 10px auto !important;
-    padding: 0 !important;
-    border-radius: 12px !important;
-    background-color: #e9ecef !important; /* Abu-abu terang (idle) */
-    color: #495057 !important;
+/* Kontainer untuk logo dan nama aplikasi */
+.sidebar-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 30px;
+    padding: 10px;
 }
 
-/* Mengatur warna tombol saat di-hover atau aktif */
-[data-testid="stSidebar"] .nav-link:hover,
-[data-testid="stSidebar"] .nav-link-selected {
-    background-color: #495057 !important; /* Abu-abu gelap (aktif) */
-    color: #ffffff !important;
+.sidebar-logo {
+    font-size: 24px;
+    font-weight: bold;
+    color: #333;
+    background-color: #D9D9D9;
+    padding: 10px 20px;
+    border-radius: 10px;
+    margin-bottom: 10px;
 }
 
-/* Mengatur ukuran ikon agar proporsional */
-[data-testid="stSidebar"] .nav-link i {
-    font-size: 24px !important;
+.sidebar-title {
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+    background-color: #D9D9D9;
+    padding: 8px 15px;
+    border-radius: 10px;
+}
+
+/* Kontainer untuk ikon navigasi */
+.sidebar-menu {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px; /* Jarak antar ikon */
+}
+
+/* Styling untuk setiap tombol ikon */
+.sidebar-button {
+    background-color: #D9D9D9;
+    border: none;
+    border-radius: 50%; /* Membuatnya bulat */
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    text-decoration: none;
+    color: #333;
+}
+
+.sidebar-button i {
+    font-size: 24px; /* Ukuran ikon */
+}
+
+/* Efek saat mouse diarahkan ke tombol */
+.sidebar-button:hover {
+    background-color: #c0c0c0;
+}
+
+/* Gaya untuk tombol yang sedang aktif */
+.sidebar-button.active {
+    background-color: #555555;
+    color: white;
+}
+
+
+/* --- Main Chatbot Page Styling --- */
+/* Kontainer utama untuk halaman chatbot */
+.chat-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center; /* Memusatkan konten secara vertikal */
+    align-items: center;    /* Memusatkan konten secara horizontal */
+    height: 80vh;           /* Mengambil 80% tinggi layar */
+    text-align: center;
+}
+
+/* Styling untuk judul prompt */
+.chat-title {
+    font-size: 24px;
+    color: #333;
+    margin-bottom: 25px;
+}
+
+/* Kontainer untuk input dan tombol kirim */
+.chat-input-container {
+    position: relative;
+    width: 100%;
+    max-width: 600px; /* Lebar maksimum dari input bar */
+}
+
+/* Styling untuk text input Streamlit */
+div[data-testid="stTextInput"] input {
+    background-color: #555555;
+    color: white;
+    border: none;
+    border-radius: 30px;
+    padding: 15px 50px 15px 25px; /* Padding: atas kanan bawah kiri */
+    font-size: 16px;
+    height: 60px;
+}
+
+/* Placeholder text styling */
+div[data-testid="stTextInput"] input::placeholder {
+    color: #b0b0b0;
+}
+
+/* Styling untuk tombol kirim (form submit button) */
+.stButton>button {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none !important;
+    border: none !important;
+    color: white !important;
+    font-size: 24px;
+    padding: 0 10px;
+}
+
+.stButton>button:hover {
+    color: #cccccc !important;
 }

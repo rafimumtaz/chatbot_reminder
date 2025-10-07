@@ -158,7 +158,7 @@ def process_prompt_with_gemini(prompt):
         today = datetime.now().date()
         today_str = today.strftime("%Y-%m-%d")
 
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        model = genai.GenerativeModel('gemini-2.5-flash')
         response = model.generate_content(
             f"""Anda adalah asisten pengingat cerdas. Tugas Anda adalah:
               1. Menganalisis teks pengguna.
@@ -435,84 +435,161 @@ def page_chatbot():
     user_id = st.session_state["user_info"]["user_id"]
     user_name = st.session_state["user_info"]["name"]
 
-    st.markdown("### Apa ada tugas minggu ini? Ayo buat pengingat!")
+    st.markdown("""
+    <style>
+        /* Menargetkan kontainer utama yang membungkus seluruh konten halaman */
+        section.main > div {
+            display: flex;           
+            flex-direction: column;    
+            justify-content: center; 
+            align-items: center;    
+            min-height: 85vh;        
+        }
+        
+        /* Gaya untuk header "ChatMyre" */
+        p.chat-header {
+            background-color: #E0E0E0;
+            padding: 8px 16px;
+            border-radius: 15px;
+            font-weight: bold;
+            color: #4F4F4F;
+            display: inline-block;
+            margin-bottom: 2rem; /* Menambah jarak ke judul */
+        }
 
-    with SessionLocal() as db:
-        user_classes = get_user_classes(db, user_id)
-        class_options = {"Pribadi": None}
-        for id_kelas, nama_kelas in user_classes.items():
-            class_options[nama_kelas] = id_kelas
+        /* Gaya untuk judul utama dan memusatkannya */
+        h3.chat-title {
+            text-align: center;
+            font-weight: 500;
+            color: #4f4f4f;
+            padding: 0;
+            margin: 0 0 1.5rem 0; /* Menambah jarak ke form input */
+        }
 
-        selected_class_name = st.selectbox(
-            "Tujuan Pengingat",
-            list(class_options.keys())
+        /* Kontainer form utama dipusatkan */
+        div[data-testid="stForm"] {
+            margin: 0 auto;
+            max-width: 700px;
+            width: 100%; /* Memastikan form mengambil lebar yang tersedia */
+        }
+
+        /* Tag <form> di dalamnya diubah menjadi Flexbox container */
+        div[data-testid="stForm"] form {
+            display: flex;
+            align-items: center;
+            background-color: #4F4F4F;
+            border-radius: 30px;
+            padding-left: 25px;
+            padding-right: 10px;
+            height: 60px;
+        }
+
+        /* Container dari input teks dibiarkan mengisi sisa ruang */
+        div[data-testid="stTextInput"] {
+            flex-grow: 1;
+        }
+
+        /* Input teks itu sendiri dibuat transparan */
+        div[data-testid="stTextInput"] input {
+            background-color: transparent;
+            color: white;
+            border: none;
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            font-size: 1rem;
+        }
+        
+        div[data-testid="stTextInput"] input::placeholder {
+            color: #BDBDBD;
+        }
+
+        div[data-testid="stTextInput"] input:focus {
+            box-shadow: none;
+        }
+
+        /* Container tombol dibuat agar tidak membesar */
+        div[data-testid="stFormSubmitButton"] {
+            flex-grow: 0;
+        }
+
+        /* Tombol itu sendiri diberi gaya seperti biasa */
+        div[data-testid="stFormSubmitButton"] button {
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 28px;
+            cursor: pointer;
+            padding: 0 15px;
+        }
+        
+        div[data-testid="stFormSubmitButton"] button:hover,
+        div[data-testid="stFormSubmitButton"] button:focus {
+            color: #BDBDBD;
+            border: none;
+            box-shadow: none !important;
+            background-color: transparent !important;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+
+    st.markdown("<p class='chat-header'>ChatMyre</p>", unsafe_allow_html=True)
+    st.markdown("<h3 class='chat-title'>Apa ada tugas minggu ini? Ayo buat pengingat!</h3>", unsafe_allow_html=True)
+
+    selected_class_id = None
+    selected_class_name = "Pribadi"
+
+    with st.form(key="chat_form"):
+        prompt = st.text_input(
+            "Ketikkan tugas Anda",
+            placeholder="Ketikkan tugas Anda",
+            label_visibility="collapsed"
         )
-        selected_class_id = class_options[selected_class_name]
+        submitted = st.form_submit_button("➤")
 
-    prompt = st.text_input(
-        "Ketikkan tugas Anda",
-        placeholder="Ketik seperti: 'ingatkan saya minggu depan saya ada tugas matematika jam 10'"
-    )
-
-    if st.button("➤", key="send_prompt"):
-        if prompt.strip():
-            with st.spinner("Memproses..."):
-                json_string = process_prompt_with_gemini(prompt)
-            if json_string:
-                try:
-                    parsed = json.loads(json_string)
-                    judul = parsed.get("judul")
-                    if not judul or judul.lower() == 'null' or judul.strip() == "":
-                        st.error(
-                            f"Maaf **{user_name}**, saya tidak dapat mengidentifikasi judul pengingat."
-                        )
-                        return
-                    tanggal_deadline_obj = None
-                    if parsed.get("tanggal_deadline"):
-                        tanggal_deadline_obj = date.fromisoformat(parsed["tanggal_deadline"])
-                    jam_deadline_obj = time.fromisoformat(parsed["jam_deadline"]) if parsed.get("jam_deadline") else time(7, 0)
-                    tanggal_pengingat_obj = tanggal_deadline_obj - timedelta(days=1) if tanggal_deadline_obj else None
-
-                    with SessionLocal() as db:
-                        pengingat = Pengingat(
-                            id_pembuat=user_id,
-                            id_kelas=selected_class_id,
-                            judul=judul,
-                            deskripsi=parsed.get("deskripsi"),
-                            tanggal_deadline=tanggal_deadline_obj,
-                            jam_deadline=jam_deadline_obj,
-                            tipe=parsed.get("jenis", "pribadi")
-                        )
-                        db.add(pengingat)
-                        db.commit()
-                        db.refresh(pengingat)
-
-                        penerima_ids = [user_id] if not selected_class_id else [
-                            a[0] for a in db.query(AnggotaKelas.id_pengguna).filter(
-                                AnggotaKelas.id_kelas == selected_class_id
-                            ).all()
-                        ]
-                        for p_id in penerima_ids:
-                            penerima = PenerimaPengingat(
-                                id_pengingat=pengingat.id_pengingat,
-                                id_pengguna=p_id
+        if submitted:
+            if prompt.strip():
+                with st.spinner("Memproses..."):
+                    json_string = process_prompt_with_gemini(prompt)
+                if json_string:
+                    try:
+                        parsed = json.loads(json_string)
+                        judul = parsed.get("judul")
+                        if not judul or judul.lower() == 'null' or judul.strip() == "":
+                            st.error(
+                                f"Maaf **{user_name}**, saya tidak dapat mengidentifikasi judul pengingat."
                             )
-                            db.add(penerima)
+                            return
+                        tanggal_deadline_obj = None
+                        if parsed.get("tanggal_deadline"):
+                            tanggal_deadline_obj = date.fromisoformat(parsed["tanggal_deadline"])
+                        jam_deadline_obj = time.fromisoformat(parsed["jam_deadline"]) if parsed.get("jam_deadline") else time(7, 0)
 
-                        log_desc = f"Chatbot: {pengingat.judul} ({selected_class_name})"
-                        log = RiwayatAktivitas(
-                            id_pengguna=user_id,
-                            jenis_aktivitas="tambah_pengingat",
-                            deskripsi=log_desc
-                        )
-                        db.add(log)
-                        db.commit()
+                        with SessionLocal() as db:
+                            pengingat = Pengingat(
+                                id_pembuat=user_id, id_kelas=selected_class_id, judul=judul,
+                                deskripsi=parsed.get("deskripsi"), tanggal_deadline=tanggal_deadline_obj,
+                                jam_deadline=jam_deadline_obj, tipe=parsed.get("jenis", "pribadi")
+                            )
+                            db.add(pengingat)
+                            db.commit(); db.refresh(pengingat)
 
-                        st.success(f"Pengingat dibuat: {pengingat.judul}")
-                        st.info(f"Tujuan: **{selected_class_name}**. Deadline: {pengingat.tanggal_deadline} {jam_deadline_obj}")
-                except Exception as e:
-                    st.error(f"Gagal memproses respons: {e}")
-                    st.text(f"Respons mentah dari AI: {json_string}")
+                            penerima_ids = [user_id]
+                            for p_id in penerima_ids:
+                                penerima = PenerimaPengingat(id_pengingat=pengingat.id_pengingat, id_pengguna=p_id)
+                                db.add(penerima)
+
+                            log = RiwayatAktivitas(
+                                id_pengguna=user_id, jenis_aktivitas="tambah_pengingat",
+                                deskripsi=f"Chatbot: {pengingat.judul} ({selected_class_name})"
+                            )
+                            db.add(log); db.commit()
+
+                            st.success(f"Pengingat dibuat: {pengingat.judul}")
+                            st.info(f"Tujuan: **{selected_class_name}**. Deadline: {pengingat.tanggal_deadline} {jam_deadline_obj}")
+                    except Exception as e:
+                        st.error(f"Gagal memproses respons: {e}")
+                        st.text(f"Respons mentah dari AI: {json_string}")
 
 def page_list():
     user_id = st.session_state["user_info"]["user_id"]
@@ -693,7 +770,6 @@ def main():
     # ---------------------------------------------
 
     st.markdown('<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">', unsafe_allow_html=True)
-    st.title("⏰ Chatbot Reminder Tugas")
 
     if "reset_message" in st.session_state:
         st.success(st.session_state["reset_message"])
