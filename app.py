@@ -222,8 +222,6 @@ def register_ui():
                 create_user(db, nama, email, password)
                 st.success("Akun berhasil dibuat. Silakan login.")
 
-# --- PERBAIKAN DI SINI ---
-# Fungsi navbar disederhanakan, semua gaya dipindahkan ke CSS di main()
 def navbar():
     with st.sidebar:
         selected = option_menu(
@@ -237,6 +235,30 @@ def navbar():
                 "clock-history", "gear", "box-arrow-right"
             ],
             default_index=0,
+            # KUNCI PERBAIKAN WARNA: Menggunakan parameter styles bawaan
+            styles={
+                "container": {
+                    "padding": "0px !important",
+                    "background-color": "transparent",
+                },
+                "icon": {
+                    "color": "white",
+                    "font-size": "1.2rem"
+                },
+                "nav-link": {
+                    "font-size": "1rem",
+                    "text-align": "left",
+                    "margin": "0px 0px 10px 0px",
+                    "padding": "0.75rem 1rem",
+                    "color": "#FFFFFF",
+                    "background-color": "#616161",
+                    "border-radius": "10px",
+                    "--hover-color": "#757575", # Warna saat di-hover
+                },
+                "nav-link-selected": {
+                    "background-color": "#424242", # Warna saat aktif (abu-abu gelap)
+                },
+            }
         )
 
     if selected == "Logout":
@@ -251,67 +273,166 @@ def navbar():
 
 def page_jadwal_pelajaran():
     user_id = st.session_state["user_info"]["user_id"]
-    st.header("📚 Jadwal Pelajaran")
 
-    hari_options = [h.value for h in Hari]
+    # --- CSS BARU untuk Halaman Jadwal Pelajaran ---
+    st.markdown("""
+    <style>
+        /* Mengatur header utama halaman */
+        .schedule-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        .schedule-header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            color: #31333F;
+        }
+        .schedule-header .stButton>button {
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            font-size: 24px;
+            background-color: #F0F2F6;
+            color: #31333F;
+            border: 1px solid #D7D9DC;
+        }
 
-    with st.expander("➕ Tambah Jadwal Baru"):
-        with st.form("form_tambah_jadwal", clear_on_submit=True):
-            display_hari_options = [h.capitalize() for h in hari_options]
-            hari_display = st.selectbox("Hari", display_hari_options, key="jadwal_hari_display")
-            hari_input = hari_display.lower()
-            pelajaran_input = st.text_input("Nama Mata Pelajaran", key="jadwal_pelajaran")
-            col1, col2 = st.columns(2)
-            with col1:
-                jam_mulai_input = st.time_input("Jam Mulai", value=time(8, 0), key="jadwal_mulai")
-            with col2:
-                jam_selesai_input = st.time_input("Jam Selesai", value=time(9, 0), key="jadwal_selesai")
-            
-            submitted = st.form_submit_button("Simpan Jadwal")
+        /* Container untuk baris kartu dengan scroll horizontal */
+        .schedule-row {
+            display: flex;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            padding-bottom: 20px;
+            margin-bottom: 2rem;
+        }
 
-            if submitted:
-                if pelajaran_input:
-                    with SessionLocal() as db:
-                        new_jadwal = JadwalPelajaran(
-                            id_pengguna=user_id,
-                            hari=Hari(hari_input),
-                            nama_pelajaran=pelajaran_input,
-                            jam_mulai=jam_mulai_input,
-                            jam_selesai=jam_selesai_input
-                        )
-                        db.add(new_jadwal)
-                        db.commit()
-                        st.success(f"Jadwal {pelajaran_input} untuk hari {hari_display} berhasil ditambahkan!")
-                        st.rerun()
-                else:
-                    st.error("Nama Mata Pelajaran tidak boleh kosong.")
+        /* PERBAIKAN KARTU: Container utama untuk setiap kartu */
+        .schedule-card {
+            flex: 0 0 280px; /* Lebar kartu tetap 280px */
+            margin-right: 20px;
+            border-radius: 12px; /* Sudut bundar untuk kartu */
+            border: 1px solid #E0E0E0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            overflow: hidden; /* Penting agar isi kartu mengikuti sudut bundar */
+            display: flex;
+            flex-direction: column;
+        }
 
-    st.subheader("Jadwal Anda")
-    with SessionLocal() as db:
-        jadwal_list = (
-            db.query(JadwalPelajaran)
-            .filter(JadwalPelajaran.id_pengguna == user_id)
-            .order_by(JadwalPelajaran.hari, JadwalPelajaran.jam_mulai)
-            .all()
-        )
+        /* Bagian atas kartu (gelap) */
+        .card-top {
+            background-color: #616161;
+            color: white;
+            padding: 15px;
+        }
+        .card-top h4 { font-size: 1.1rem; margin: 0 0 5px 0; padding: 0; }
+        .card-top p { font-size: 0.9rem; margin: 0; padding: 0; }
+
+        /* PERBAIKAN KARTU: Bagian bawah kartu (terang) */
+        .card-bottom {
+            background-color: #F5F5F5;
+            padding: 10px 15px;
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end; /* Mendorong tombol ke kanan */
+        }
         
+        /* PERBAIKAN TOMBOL: Gaya untuk tombol Hapus */
+        .schedule-card .stButton>button {
+            background-color: #FF4B4B !important; /* Warna merah */
+            color: white !important;             /* Teks putih */
+            border-radius: 8px !important;
+            border: none !important;
+            padding: 5px 15px !important;
+        }
+        .schedule-card .stButton>button:hover {
+            background-color: #E03C3C !important;
+            color: white !important;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+
+    # --- Header Halaman ---
+    if 'show_jadwal_form' not in st.session_state:
+        st.session_state.show_jadwal_form = False
+    
+    header_cols = st.columns([0.85, 0.15])
+    with header_cols[0]:
+        st.markdown("<div class='schedule-header'><h1>Jadwal Pelajaran</h1></div>", unsafe_allow_html=True)
+    with header_cols[1]:
+        if st.button("＋", key="add_schedule"):
+            st.session_state.show_jadwal_form = not st.session_state.show_jadwal_form
+
+    # --- Form Tambah Jadwal ---
+    if st.session_state.show_jadwal_form:
+        with st.expander("➕ Tambah Jadwal Baru", expanded=True):
+            # ... (Kode form tidak berubah) ...
+            with st.form("form_tambah_jadwal", clear_on_submit=True):
+                hari_options = [h.value for h in Hari]
+                display_hari_options = [h.capitalize() for h in hari_options]
+                hari_display = st.selectbox("Hari", display_hari_options, key="jadwal_hari_display")
+                hari_input = hari_display.lower()
+                pelajaran_input = st.text_input("Nama Mata Pelajaran", key="jadwal_pelajaran")
+                col1, col2 = st.columns(2)
+                with col1:
+                    jam_mulai_input = st.time_input("Jam Mulai", value=time(8, 0), key="jadwal_mulai")
+                with col2:
+                    jam_selesai_input = st.time_input("Jam Selesai", value=time(9, 0), key="jadwal_selesai")
+                submitted = st.form_submit_button("Simpan Jadwal")
+                if submitted:
+                    if pelajaran_input:
+                        with SessionLocal() as db:
+                            new_jadwal = JadwalPelajaran(
+                                id_pengguna=user_id, hari=Hari(hari_input),
+                                nama_pelajaran=pelajaran_input,
+                                jam_mulai=jam_mulai_input, jam_selesai=jam_selesai_input
+                            )
+                            db.add(new_jadwal)
+                            db.commit()
+                            st.success(f"Jadwal {pelajaran_input} berhasil ditambahkan!")
+                            st.rerun()
+                    else:
+                        st.error("Nama Mata Pelajaran tidak boleh kosong.")
+    
+    # --- Tampilan Jadwal Anda (Struktur Baru) ---
+    with SessionLocal() as db:
+        jadwal_list = db.query(JadwalPelajaran).filter(JadwalPelajaran.id_pengguna == user_id).order_by(JadwalPelajaran.hari, JadwalPelajaran.jam_mulai).all()
         jadwal_by_day = {h.value: [] for h in Hari}
         for j in jadwal_list:
             jadwal_by_day[j.hari.value].append(j)
 
-        for hari_val in hari_options:
-            if jadwal_by_day[hari_val]:
-                with st.expander(f"**{hari_val.capitalize()}** ({len(jadwal_by_day[hari_val])} Pelajaran)"):
-                    for j in jadwal_by_day[hari_val]:
-                        colA, colB, colC = st.columns([0.2, 0.6, 0.2])
-                        colA.write(f"**{j.jam_mulai.strftime('%H:%M')} - {j.jam_selesai.strftime('%H:%M')}**")
-                        colB.write(f"{j.nama_pelajaran}")
-                        
-                        if colC.button("Hapus", key=f"del_{j.id_jadwal}"):
-                            db.delete(j)
-                            db.commit()
-                            st.warning("Jadwal dihapus. Memuat ulang...")
-                            st.rerun()
+        for hari_val, jadwal_harian in jadwal_by_day.items():
+            if jadwal_harian:
+                st.subheader(hari_val.capitalize())
+                
+                st.markdown('<div class="schedule-row">', unsafe_allow_html=True)
+                for j in jadwal_harian:
+                    # Setiap kartu sekarang dibangun di dalam satu blok HTML
+                    card_html = f"""
+                        <div class="schedule-card">
+                            <div class="card-top">
+                                <h4>{j.nama_pelajaran}</h4>
+                                <p>{j.jam_mulai.strftime('%H:%M')} - {j.jam_selesai.strftime('%H:%M')}</p>
+                            </div>
+                            <div class="card-bottom">
+                                </div>
+                        </div>
+                    """
+                    # Gunakan st.columns untuk menempatkan tombol di dalam layout
+                    with st.container():
+                        st.markdown(card_html, unsafe_allow_html=True)
+                        # Tombol ini tidak terlihat langsung, tapi posisinya akan diatur oleh CSS
+                        if st.button("Hapus", key=f"del_{j.id_jadwal}"):
+                             with SessionLocal() as db_inner:
+                                jadwal_to_delete = db_inner.query(JadwalPelajaran).filter(JadwalPelajaran.id_jadwal == j.id_jadwal).first()
+                                if jadwal_to_delete:
+                                    db_inner.delete(jadwal_to_delete)
+                                    db_inner.commit()
+                                    st.rerun()
+
+                st.markdown('</div>', unsafe_allow_html=True)
 
 def page_kelas_management():
     user_id = st.session_state["user_info"]["user_id"]
@@ -757,35 +878,66 @@ def page_settings():
 def main():
     st.set_page_config(page_title="Chatbot Reminder", page_icon="⏰", layout="centered")
 
-    try:
-        # Menggunakan pathlib untuk path yang lebih andal
-        script_path = Path(__file__).resolve()
-        script_dir = script_path.parent
-        css_file_path = script_dir / "style.css"
-    except NameError:
-        # Jika __file__ tidak terdefinisi (misalnya saat dijalankan di notebook interaktif)
-        st.warning("Tidak bisa menentukan path skrip secara otomatis.")
-    except Exception as e:
-        st.error(f"Terjadi error saat mencoba memuat CSS: {e}")
-    # ---------------------------------------------
+    # --- CSS Kustom HANYA UNTUK LATAR & TATA LETAK SIDEBAR ---
+    st.markdown("""
+    <style>
+        /* Menata panel sidebar utama */
+        [data-testid="stSidebar"] > div:first-child {
+            background-color: #E0E0E0;
+            padding: 1.5rem 1rem;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
 
-    st.markdown('<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">', unsafe_allow_html=True)
+        /* KUNCI PERBAIKAN TATA LETAK */
+        /* Mengatur agar list menu mengisi ruang yang tersedia */
+        [data-testid="stSidebar"] ul {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
 
+        /* Mendorong item "Pengaturan Akun" dan setelahnya ke bawah */
+        [data-testid="stSidebar"] ul li:nth-last-child(2) {
+            margin-top: auto;
+        }
+
+        /* Menyesuaikan tampilan st.expander */
+        div[data-testid="stExpander"] {
+            border-radius: 12px !important;
+            border: 1px solid #E0E0E0 !important;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05) !important;
+        }
+        div[data-testid="stExpander"] > details > summary {
+            font-size: 1.1rem !important;
+        }
+
+        /* Menghilangkan padding atas yang berlebih di halaman */
+        .block-container {
+            padding-top: 2rem !important;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+    # --- Akhir dari Blok CSS Kustom ---
+
+    # Sisa dari fungsi main() Anda tetap sama persis
     if "reset_message" in st.session_state:
         st.success(st.session_state["reset_message"])
         del st.session_state["reset_message"]
 
+    # ... (sisa kode Anda di fungsi main tidak berubah) ...
     query_params = st.query_params
     if "code" in query_params:
         flow = Flow.from_client_secrets_file(
-            "client_secrets.json",
-            scopes=SCOPES,
-            redirect_uri=REDIRECT_URI
+            "client_secrets.json", scopes=SCOPES, redirect_uri=REDIRECT_URI
         )
         try:
             flow.fetch_token(code=query_params["code"])
             credentials = flow.credentials
-            
             with build("oauth2", "v2", credentials=credentials) as service:
                 user_info = service.userinfo().get().execute()
             
@@ -798,11 +950,9 @@ def main():
                     user = create_user(db, user_name, user_email)
                 
                 st.query_params.clear()
-                
                 st.session_state["authentication_status"] = True
                 st.session_state["user_info"] = {"name": user_name, "email": user_email, "user_id": user.id_pengguna}
                 st.rerun()
-
         except Exception as e:
             st.error(f"Terjadi kesalahan saat otentikasi: {e}")
             st.query_params.clear()
