@@ -622,7 +622,6 @@ def page_chatbot():
             flex-grow: 0;
         }
 
-        /* Tombol itu sendiri diberi gaya seperti biasa */
         div[data-testid="stFormSubmitButton"] button {
             background: transparent;
             border: none;
@@ -865,8 +864,6 @@ def page_settings():
 # ------------------------------------------------
 def main():
     st.set_page_config(page_title="Chatbot Reminder", page_icon="⏰", layout="centered")
-
-    # --- CSS Kustom HANYA UNTUK LATAR & TATA LETAK SIDEBAR ---
     st.markdown("""
     <style>
         /* Menata panel sidebar utama */
@@ -878,8 +875,6 @@ def main():
             height: 100vh;
         }
 
-        /* KUNCI PERBAIKAN TATA LETAK */
-        /* Mengatur agar list menu mengisi ruang yang tersedia */
         [data-testid="stSidebar"] ul {
             display: flex;
             flex-direction: column;
@@ -889,12 +884,10 @@ def main():
             margin: 0;
         }
 
-        /* Mendorong item "Pengaturan Akun" dan setelahnya ke bawah */
         [data-testid="stSidebar"] ul li:nth-last-child(2) {
             margin-top: auto;
         }
 
-        /* Menyesuaikan tampilan st.expander */
         div[data-testid="stExpander"] {
             border-radius: 12px !important;
             border: 1px solid #E0E0E0 !important;
@@ -904,7 +897,6 @@ def main():
             font-size: 1.1rem !important;
         }
 
-        /* Menghilangkan padding atas yang berlebih di halaman */
         .block-container {
             padding-top: 2rem !important;
         }
