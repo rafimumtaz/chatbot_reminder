@@ -55,6 +55,7 @@ class Kelas(Base):
     id_pembuat = Column(Integer, ForeignKey("pengguna.id_pengguna"), nullable=False) 
     kode_kelas = Column(String(10), unique=True, nullable=False, index=True) 
     nama_kelas = Column(String(100), nullable=False)
+    wali_kelas = Column(String(100), nullable=False)
     deskripsi = Column(Text)
     
     # Relationships
