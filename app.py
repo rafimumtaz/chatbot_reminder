@@ -235,7 +235,6 @@ def navbar():
                 "clock-history", "gear", "box-arrow-right"
             ],
             default_index=0,
-            # KUNCI PERBAIKAN WARNA: Menggunakan parameter styles bawaan
             styles={
                 "container": {
                     "padding": "0px !important",
@@ -253,10 +252,10 @@ def navbar():
                     "color": "#FFFFFF",
                     "background-color": "#616161",
                     "border-radius": "10px",
-                    "--hover-color": "#757575", # Warna saat di-hover
+                    "--hover-color": "#757575", 
                 },
                 "nav-link-selected": {
-                    "background-color": "#424242", # Warna saat aktif (abu-abu gelap)
+                    "background-color": "#424242", 
                 },
             }
         )
@@ -274,7 +273,6 @@ def navbar():
 def page_jadwal_pelajaran():
     user_id = st.session_state["user_info"]["user_id"]
 
-    # --- CSS BARU untuk Halaman Jadwal Pelajaran ---
     st.markdown("""
     <style>
         /* Mengatur header utama halaman */
@@ -299,7 +297,6 @@ def page_jadwal_pelajaran():
             border: 1px solid #D7D9DC;
         }
 
-        /* Container untuk baris kartu dengan scroll horizontal */
         .schedule-row {
             display: flex;
             flex-wrap: nowrap;
@@ -308,19 +305,17 @@ def page_jadwal_pelajaran():
             margin-bottom: 2rem;
         }
 
-        /* PERBAIKAN KARTU: Container utama untuk setiap kartu */
         .schedule-card {
-            flex: 0 0 280px; /* Lebar kartu tetap 280px */
+            flex: 0 0 280px; 
             margin-right: 20px;
-            border-radius: 12px; /* Sudut bundar untuk kartu */
+            border-radius: 12px; 
             border: 1px solid #E0E0E0;
             box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            overflow: hidden; /* Penting agar isi kartu mengikuti sudut bundar */
+            overflow: hidden; 
             display: flex;
             flex-direction: column;
         }
 
-        /* Bagian atas kartu (gelap) */
         .card-top {
             background-color: #616161;
             color: white;
@@ -329,20 +324,18 @@ def page_jadwal_pelajaran():
         .card-top h4 { font-size: 1.1rem; margin: 0 0 5px 0; padding: 0; }
         .card-top p { font-size: 0.9rem; margin: 0; padding: 0; }
 
-        /* PERBAIKAN KARTU: Bagian bawah kartu (terang) */
         .card-bottom {
             background-color: #F5F5F5;
             padding: 10px 15px;
             flex-grow: 1;
             display: flex;
             align-items: center;
-            justify-content: flex-end; /* Mendorong tombol ke kanan */
+            justify-content: flex-end; 
         }
         
-        /* PERBAIKAN TOMBOL: Gaya untuk tombol Hapus */
         .schedule-card .stButton>button {
-            background-color: #FF4B4B !important; /* Warna merah */
-            color: white !important;             /* Teks putih */
+            background-color: #FF4B4B !important; 
+            color: white !important;             
             border-radius: 8px !important;
             border: none !important;
             padding: 5px 15px !important;
@@ -368,7 +361,6 @@ def page_jadwal_pelajaran():
     # --- Form Tambah Jadwal ---
     if st.session_state.show_jadwal_form:
         with st.expander("➕ Tambah Jadwal Baru", expanded=True):
-            # ... (Kode form tidak berubah) ...
             with st.form("form_tambah_jadwal", clear_on_submit=True):
                 hari_options = [h.value for h in Hari]
                 display_hari_options = [h.capitalize() for h in hari_options]
@@ -396,7 +388,6 @@ def page_jadwal_pelajaran():
                     else:
                         st.error("Nama Mata Pelajaran tidak boleh kosong.")
     
-    # --- Tampilan Jadwal Anda (Struktur Baru) ---
     with SessionLocal() as db:
         jadwal_list = db.query(JadwalPelajaran).filter(JadwalPelajaran.id_pengguna == user_id).order_by(JadwalPelajaran.hari, JadwalPelajaran.jam_mulai).all()
         jadwal_by_day = {h.value: [] for h in Hari}
@@ -409,7 +400,6 @@ def page_jadwal_pelajaran():
                 
                 st.markdown('<div class="schedule-row">', unsafe_allow_html=True)
                 for j in jadwal_harian:
-                    # Setiap kartu sekarang dibangun di dalam satu blok HTML
                     card_html = f"""
                         <div class="schedule-card">
                             <div class="card-top">
@@ -420,10 +410,8 @@ def page_jadwal_pelajaran():
                                 </div>
                         </div>
                     """
-                    # Gunakan st.columns untuk menempatkan tombol di dalam layout
                     with st.container():
                         st.markdown(card_html, unsafe_allow_html=True)
-                        # Tombol ini tidak terlihat langsung, tapi posisinya akan diatur oleh CSS
                         if st.button("Hapus", key=f"del_{j.id_jadwal}"):
                              with SessionLocal() as db_inner:
                                 jadwal_to_delete = db_inner.query(JadwalPelajaran).filter(JadwalPelajaran.id_jadwal == j.id_jadwal).first()
@@ -613,7 +601,7 @@ def page_chatbot():
         /* Input teks itu sendiri dibuat transparan */
         div[data-testid="stTextInput"] input {
             background-color: transparent;
-            color: white;
+            color: black;
             border: none;
             padding: 0;
             margin: 0;
