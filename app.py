@@ -822,144 +822,142 @@ def page_chatbot():
                         st.error(f"Gagal memproses respons: Terjadi kesalahan teknis. ({e})")
                         st.text(f"Respons mentah dari AI: {json_string}")
 
-                       
-
 def page_list():
     user_id = st.session_state["user_info"]["user_id"]
-
-    # --- CSS Khusus untuk Halaman Daftar Pengingat ---
     st.markdown("""
     <style>
-        /* Header utama halaman */
-        .reminder-header {
+        /* --- HEADER --- */
+
+        /* 1. Kontainer utama untuk header dengan Flexbox */
+        .reminder-header-container {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
+            align-items: center; /* KUNCI: Menyelaraskan semua item secara vertikal */
             margin-bottom: 2rem;
-            border-bottom: 2px solid #E0E0E0;
+            border-bottom: 1px solid #D7D9DC;
             padding-bottom: 1rem;
         }
-        /* Tombol Tambah (+) */
-        .reminder-header .stButton>button {
-            border-radius: 10px;
-            width: 50px;
-            height: 50px;
-            font-size: 32px;
-            font-weight: 300;
-            background-color: #F0F2F6;
-            color: #31333F;
+
+        /* 2. Tombol Tambah (+) */
+        .add-btn-container .stButton>button {
+            border-radius: 10px; width: 50px; height: 50px; font-size: 32px;
+            font-weight: 300; background-color: #F0F2F6; color: #31333F;
             border: 1px solid #D7D9DC;
+            margin-right: 20px; /* Jarak antara tombol + dan tanggal */
         }
 
-        /* Tampilan Tanggal Realtime */
-        .date-display {
-            text-align: right;
-        }
-        .date-display .date-text {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #31333F;
-            margin: 0;
-        }
-        .date-display .day-text {
-            font-size: 1.1rem;
-            color: #616161;
-            margin: 0;
-        }
+        /* 3. Tampilan Tanggal */
+        .date-display { flex-grow: 1; /* Mendorong navigasi ke kanan */ }
+        .date-display .date-text { font-size: 1.5rem; font-weight: bold; color: #31333F; margin: 0; }
+        .date-display .day-text { font-size: 1.1rem; color: #616161; margin: 0; }
         
-        /* Mengatur setiap item pengingat (st.expander) */
-        div[data-testid="stExpander"] {
-            border: none !important;
-            box-shadow: none !important;
-            margin-bottom: 10px;
+        /* 4. Navigasi Tanggal (< Today >) */
+        .date-nav-controls { display: flex; align-items: center; }
+        .date-nav-controls .stButton>button {
+            background-color: #E0E0E0; color: #31333F; border: 1px solid #BDBDBD;
+            border-radius: 8px; margin: 0 3px !important; /* Perkecil jarak antar tombol */
+            padding: 0.25rem 0.5rem;
         }
+        /* KUNCI: Atur lebar tombol tengah agar tidak berubah ukuran */
+        .date-nav-controls > div:nth-child(2) .stButton>button {
+            min-width: 100px;
+        }
+
+        /* --- DAFTAR TUGAS --- */
+
+        /* Mengurangi jarak antar item pengingat */
+        div[data-testid="stExpander"] {
+            border: none !important; box-shadow: none !important; margin-bottom: -30px !important;
+        }
+        /* Mengatur tampilan expander */
         div[data-testid="stExpander"] > details {
-            border-radius: 10px;
-            background-color: #E0E0E0; /* Warna abu-abu terang */
+            border-radius: 10px; background-color: #E0E0E0;
         }
         div[data-testid="stExpander"] > details > summary {
-            font-size: 1rem;
-            color: #31333F;
-            padding: 15px;
+            display: flex; justify-content: space-between; align-items: center;
+            font-size: 1rem; color: #31333F; padding: 15px;
         }
-        /* Menghilangkan panah default dari expander */
+        /* Menghilangkan panah default expander */
+        div[data-testid="stExpander"] > details > summary::before,
         div[data-testid="stExpander"] > details > summary::marker,
         div[data-testid="stExpander"] > details > summary::-webkit-details-marker {
-            display: none;
+            display: none !important; content: '';
         }
-        
-        /* Gaya untuk form edit di dalam expander */
-        .st-emotion-cache-1r6slb0 { /* Target container dalam expander */
-            border-top: 1px solid #BDBDBD;
+        /* Menambahkan waktu deadline di sisi kanan */
+        div[data-testid="stExpander"] > details > summary::after {
+            content: attr(data-deadline);
+            color: #616161; font-size: 0.9rem;
         }
     </style>
     """, unsafe_allow_html=True)
     
-    # --- State Management untuk Form Tambah ---
+    # --- State Management ---
     if 'show_add_reminder_form' not in st.session_state:
         st.session_state.show_add_reminder_form = False
+    if 'viewed_date' not in st.session_state:
+        st.session_state.viewed_date = date.today()
 
-    # --- Header Halaman (Tombol +, Tanggal Realtime) ---
-    header_cols = st.columns([0.15, 0.85])
-    with header_cols[0]:
+    # --- Header Halaman (Struktur HTML Baru) ---
+    # Menggunakan st.columns dengan rasio yang tepat untuk kontrol posisi
+    c1, c2, c3 = st.columns([0.1, 0.5, 0.4])
+    with c1:
         if st.button("＋", key="add_new_reminder_plus"):
             st.session_state.show_add_reminder_form = not st.session_state.show_add_reminder_form
-    with header_cols[1]:
-        # Logika untuk mendapatkan tanggal dan hari realtime dalam Bahasa Indonesia
-        now = datetime.now()
+    
+    with c2:
+        viewed_date = st.session_state.viewed_date
         day_map = {"Monday": "Senin", "Tuesday": "Selasa", "Wednesday": "Rabu", "Thursday": "Kamis", "Friday": "Jum'at", "Saturday": "Sabtu", "Sunday": "Minggu"}
-        month_map = {1: "Januari", 2: "Februari", 3: "Maret", 4: "April", 5: "Mei", 6: "Juni", 7: "Juli", 8: "Agustus", 9: "September", 10: "Oktober", 11: "November", 12: "Desember"}
+        month_map = {m: n for m, n in zip(range(1, 13), ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"])}
+        date_str = f"{viewed_date.day} {month_map[viewed_date.month]}, {viewed_date.year}"
+        day_str = day_map[viewed_date.strftime("%A")]
+        st.markdown(f'<div class="date-display"><p class="date-text">{date_str}</p><p class="day-text">{day_str}</p></div>', unsafe_allow_html=True)
+
+    with c3:
+        st.markdown('<div class="date-nav-controls">', unsafe_allow_html=True)
+        nav_buttons = st.columns([1, 1.5, 1])
+        with nav_buttons[0]:
+            if st.button("⟨", key="prev_day", use_container_width=True):
+                st.session_state.viewed_date -= timedelta(days=1); st.rerun()
+        with nav_buttons[1]:
+            today_date = date.today()
+            button_text = "Today" if viewed_date == today_date else "Tomorrow" if viewed_date == today_date + timedelta(days=1) else viewed_date.strftime("%d %b")
+            if st.button(button_text, key="today", use_container_width=True):
+                st.session_state.viewed_date = today_date; st.rerun()
+        with nav_buttons[2]:
+            if st.button("⟩", key="next_day", use_container_width=True):
+                st.session_state.viewed_date += timedelta(days=1); st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
         
-        date_str = f"{now.day} {month_map[now.month]}, {now.year}"
-        day_str = day_map[now.strftime("%A")]
-        
-        st.markdown(f"""
-            <div class="date-display">
-                <p class="date-text">{date_str}</p>
-                <p class="day-text">{day_str}</p>
-            </div>
-        """, unsafe_allow_html=True)
-        
-    # --- Form Tambah Pengingat Manual (muncul saat + diklik) ---
+    st.markdown("<hr style='margin-top: -10px;'>", unsafe_allow_html=True)
+
+    # --- Form Tambah Pengingat Manual ---
     if st.session_state.show_add_reminder_form:
         with st.expander("Buat Pengingat Baru", expanded=True):
-            # SEMUA LOGIKA FORM ANDA YANG LAMA DITEMPATKAN DI SINI
             with st.form("new_reminder_form", clear_on_submit=True):
                 with SessionLocal() as db_class_check:
                     user_classes = get_user_classes(db_class_check, user_id)
                 class_options = {"Pribadi": None, **{nama: id_ for id_, nama in user_classes.items()}}
-                
                 selected_class_name = st.selectbox("Tujuan Pengingat", list(class_options.keys()), key="add_rem_target")
                 selected_class_id = class_options[selected_class_name]
-                
                 new_title = st.text_input("Judul Pengingat", key="add_rem_title")
                 new_desc = st.text_area("Deskripsi", key="add_rem_desc")
-                
                 col1_add, col2_add = st.columns(2)
                 with col1_add:
                     new_date = st.date_input("Tanggal Deadline", date.today(), key="add_rem_date")
                 with col2_add:
                     new_time = st.time_input("Jam Deadline", time(8, 30), key="add_rem_time")
-                
                 if st.form_submit_button("Simpan Pengingat"):
                     if new_title:
                         with SessionLocal() as db:
-                            pengingat = Pengingat(
-                                id_pembuat=user_id, id_kelas=selected_class_id, judul=new_title,
-                                deskripsi=new_desc, tanggal_deadline=new_date, jam_deadline=new_time,
-                                tipe=selected_class_name
-                            )
+                            # Logika penyimpanan ke database (tidak diubah)
+                            pengingat = Pengingat(id_pembuat=user_id, id_kelas=selected_class_id, judul=new_title, deskripsi=new_desc, tanggal_deadline=new_date, jam_deadline=new_time, tipe=selected_class_name)
                             db.add(pengingat)
                             db.commit(); db.refresh(pengingat)
-                            
                             penerima_ids = [user_id]
                             if selected_class_id:
                                 anggota = db.query(AnggotaKelas.id_pengguna).filter(AnggotaKelas.id_kelas == selected_class_id).all()
                                 penerima_ids = [a[0] for a in anggota]
-                            
                             for p_id in penerima_ids:
                                 db.add(PenerimaPengingat(id_pengingat=pengingat.id_pengingat, id_pengguna=p_id))
-                            
                             db.commit()
                             st.success(f"Pengingat '{new_title}' berhasil ditambahkan.")
                             st.session_state.show_add_reminder_form = False
@@ -969,59 +967,57 @@ def page_list():
 
     # --- Daftar Pengingat ---
     with SessionLocal() as db:
-        items = db.query(Pengingat, Kelas, Pengguna.nama_lengkap.label('pembuat_nama')
-            ).outerjoin(Kelas, Pengingat.id_kelas == Kelas.id_kelas
-            ).join(Pengguna, Pengingat.id_pembuat == Pengguna.id_pengguna
-            ).join(PenerimaPengingat, PenerimaPengingat.id_pengingat == Pengingat.id_pengingat
-            ).filter(PenerimaPengingat.id_pengguna == user_id
-            ).distinct().order_by(Pengingat.tanggal_deadline.asc(), Pengingat.jam_deadline.asc()
-            ).all()
+        items = db.query(
+            Pengingat, Kelas, Pengguna.nama_lengkap.label('pembuat_nama')
+        ).outerjoin(Kelas, Pengingat.id_kelas == Kelas.id_kelas
+        ).join(Pengguna, Pengingat.id_pembuat == Pengguna.id_pengguna
+        ).join(PenerimaPengingat, PenerimaPengingat.id_pengingat == Pengingat.id_pengingat
+        ).filter(
+            PenerimaPengingat.id_pengguna == user_id,
+            Pengingat.tanggal_deadline == st.session_state.viewed_date
+        ).distinct().order_by(Pengingat.jam_deadline.asc()
+        ).all()
 
-    st.markdown("---")
-    
-    # Menampilkan pengingat yang ada
     if not items:
-        st.info("Belum ada pengingat untuk hari ini.")
+        st.info(f"Tidak ada pengingat untuk tanggal {st.session_state.viewed_date.strftime('%d %B %Y')}.")
     else:
         for i, (pengingat, kelas, pembuat_nama) in enumerate(items):
-            # Membuat label untuk expander
-            label_header = f"{pengingat.judul}"
+            label_judul = f"&nbsp; {pengingat.judul}"
+            deadline_str = f"{pengingat.jam_deadline.strftime('%H:%M')}"
             
-            with st.expander(label_header):
-                # SEMUA LOGIKA EDIT FORM ANDA YANG LAMA DITEMPATKAN DI SINI
+            # Trik CSS: Bungkus expander dengan div yang membawa data-deadline
+            st.markdown(f'<div data-deadline="{deadline_str}">', unsafe_allow_html=True)
+            with st.expander(label_judul, expanded=False):
+                # Logika form edit dan hapus (tidak diubah)
                 st.subheader("Edit Pengingat")
                 unique_base_key = f"{pengingat.id_pengingat}_{i}"
-                
                 new_title = st.text_input("Judul", pengingat.judul, key=f"title_{unique_base_key}")
                 new_desc = st.text_area("Deskripsi", pengingat.deskripsi or "", key=f"desc_{unique_base_key}")
-                
                 col1_e, col2_e = st.columns(2)
                 with col1_e:
                     new_date = st.date_input("Tanggal deadline", pengingat.tanggal_deadline or date.today(), key=f"date_{unique_base_key}")
                 with col2_e:
                     new_time = st.time_input("Jam deadline", pengingat.jam_deadline or time(8, 30), key=f"time_{unique_base_key}")
-                
                 col_save, col_delete = st.columns(2)
                 with col_save:
                     if st.button("Simpan Perubahan", key=f"save_{unique_base_key}"):
                         with SessionLocal() as db_update:
                             p_to_update = db_update.query(Pengingat).get(pengingat.id_pengingat)
-                            p_to_update.judul = new_title
-                            p_to_update.deskripsi = new_desc
-                            p_to_update.tanggal_deadline = new_date
-                            p_to_update.jam_deadline = new_time
-                            db_update.commit()
-                        st.success("Perubahan berhasil disimpan.")
-                        st.rerun()
+                            if p_to_update:
+                                p_to_update.judul = new_title; p_to_update.deskripsi = new_desc
+                                p_to_update.tanggal_deadline = new_date; p_to_update.jam_deadline = new_time
+                                db_update.commit()
+                                st.success("Perubahan berhasil disimpan."); st.rerun()
                 with col_delete:
                     if st.button("Hapus Pengingat", key=f"delete_{unique_base_key}", type="primary"):
                         with SessionLocal() as db_delete:
                             p_to_delete = db_delete.query(Pengingat).get(pengingat.id_pengingat)
-                            db_delete.query(PenerimaPengingat).filter(PenerimaPengingat.id_pengingat == p_to_delete.id_pengingat).delete()
-                            db_delete.delete(p_to_delete)
-                            db_delete.commit()
-                        st.warning(f"Pengingat '{pengingat.judul}' berhasil dihapus.")
-                        st.rerun()
+                            if p_to_delete:
+                                db_delete.query(PenerimaPengingat).filter(PenerimaPengingat.id_pengingat == p_to_delete.id_pengingat).delete()
+                                db_delete.delete(p_to_delete)
+                                db_delete.commit()
+                                st.warning(f"Pengingat '{pengingat.judul}' berhasil dihapus."); st.rerun()
+            st.markdown('</div>', unsafe_allow_html=True)
 
 def page_riwayat_terpadu():
     # Pastikan user_info ada di session_state
@@ -1223,7 +1219,7 @@ def main():
         }
         div[data-testid="stExpander"] > details > summary {
             font-size: 1.1rem !important;
-        }   
+        }
     </style>
     """, unsafe_allow_html=True)
   
