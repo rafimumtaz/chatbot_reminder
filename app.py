@@ -250,7 +250,7 @@ def navbar():
             menu_title=None,
             options=[
                 "Chatbot", "Daftar Pengingat", "Jadwal Pelajaran",
-                "Manajemen Kelas", "Riwayat Notifikasi", "Pengaturan Akun", "Logout"
+                "Manajemen Kelas", "Riwayat", "Pengaturan Akun", "Logout"
             ],
             icons=[
                 "chat-dots", "list-task", "book", "grid",
@@ -807,7 +807,7 @@ def page_chatbot():
                                 db.add(penerima)
                             
                             log_desc = f"Chatbot: {pengingat.judul} (Tujuan: {selected_class_name})"
-                            log = RiwayatAktivitas(id_pengguna=user_id, jenis_aktivitas="tambah_pengingat", deskripsi=log_desc)
+                            log = RiwayatAktivitas(id_pengguna=user_id, jenis_aktivitas="tambah pengingat", deskripsi=log_desc)
                             db.add(log); 
                             db.commit()
                             
@@ -1019,49 +1019,105 @@ def page_list():
                         st.warning(f"Pengingat '{pengingat.judul}' berhasil dihapus.")
                         st.rerun()
 
-def page_riwayat_notifikasi():
-    user_id = st.session_state["user_info"]["user_id"]
-    st.header("⏳ Riwayat Notifikasi")
+def page_riwayat_terpadu():
+    # Pastikan user_info ada di session_state
+    if "user_info" not in st.session_state:
+        st.warning("Silakan login terlebih dahulu.")
+        return
 
-    col_title, col_button = st.columns([0.8, 0.2])
-    with col_button:
-        if st.button("🧹 Hapus Riwayat", key="clear_notif_history", type="primary"):
+    user_id = st.session_state["user_info"]["user_id"]
+    st.header("⏳ Riwayat Terpadu")
+    st.caption("Menampilkan gabungan riwayat notifikasi dan aktivitas Anda.")
+
+    # --- Tombol Hapus Riwayat ---
+    if st.button("🧹 Hapus Semua Riwayat", key="clear_all_history", type="primary"):
+        try:
             with SessionLocal() as db:
                 db.query(Notifikasi).filter(Notifikasi.id_pengguna == user_id).delete(synchronize_session=False)
+                db.query(RiwayatAktivitas).filter(RiwayatAktivitas.id_pengguna == user_id).delete(synchronize_session=False)
                 db.commit()
-                st.success("Riwayat notifikasi berhasil dibersihkan. Memuat ulang...")
+                st.success("Semua riwayat berhasil dibersihkan. Memuat ulang...")
                 st.rerun()
+        except Exception as e:
+            st.error(f"Terjadi kesalahan: {e}")
 
+    st.divider()
+
+    # --- Logika untuk Mengambil dan Menggabungkan Data ---
+    combined_history = []
     with SessionLocal() as db:
-        data_query = db.query(
-            Pengingat.judul.label("Judul Pengingat"),
-            Notifikasi.waktu_kirim.label("Waktu Kirim"),
-            Pengguna.email.label("Email Penerima"),
-            Notifikasi.metode.label("Metode"),
-            Notifikasi.status.label("Status")
+        # 1. Ambil data Riwayat Notifikasi
+        notifikasi_query = db.query(
+            Pengingat.judul,
+            Notifikasi.waktu_kirim,
+            Notifikasi.status,
+            Notifikasi.metode
         ).join(
             Pengingat, Notifikasi.id_pengingat == Pengingat.id_pengingat
-        ).join(
-            Pengguna, Notifikasi.id_pengguna == Pengguna.id_pengguna
         ).filter(
             Notifikasi.id_pengguna == user_id
-        ).order_by(Notifikasi.waktu_kirim.desc()).all()
+        ).all()
 
-        if data_query:
-            riwayat_data = [
-                {
-                    "Judul Pengingat": row[0],
-                    "Waktu Kirim": row[1].strftime("%Y-%m-%d %H:%M:%S"),
-                    "Email Penerima": row[2],
-                    "Metode": row[3].value,
-                    "Status": row[4].value
-                }
-                for row in data_query
-            ]
-            st.dataframe(riwayat_data, use_container_width=True)
-        else:
-            st.info("Belum ada riwayat notifikasi yang tersimpan untuk Anda.")
+        for row in notifikasi_query:
+            combined_history.append({
+                "tipe": "notifikasi",
+                "timestamp": row.waktu_kirim,
+                "judul": f"Pengingat: {row.judul}",
+                "deskripsi": f"Status: **{row.status.value}** | Metode: **{row.metode.value}**"
+            })
 
+        # 2. Ambil data Riwayat Aktivitas
+        aktivitas_query = db.query(
+            RiwayatAktivitas.jenis_aktivitas,
+            RiwayatAktivitas.deskripsi,
+            RiwayatAktivitas.waktu
+        ).filter(
+            RiwayatAktivitas.id_pengguna == user_id
+        ).all()
+
+        for row in aktivitas_query:
+            combined_history.append({
+                "tipe": "aktivitas",
+                "timestamp": row.waktu,
+                "judul": row.jenis_aktivitas,
+                "deskripsi": row.deskripsi
+            })
+
+    # --- Menampilkan Riwayat Gabungan ---
+    if combined_history:
+        # 3. Urutkan semua riwayat berdasarkan waktu (timestamp) dari yang terbaru
+        # --- PERBAIKAN DI SINI ---
+        # Mengganti None dengan tanggal minimum agar bisa diurutkan
+        combined_history.sort(key=lambda item: item['timestamp'] if item['timestamp'] is not None else datetime.min, reverse=True)
+
+        st.subheader("Aktivitas Terbaru Anda")
+
+        # 4. Tampilkan dalam format feed (non-tabel)
+        for item in combined_history:
+            with st.container():
+                # Jika timestamp tidak ada, tampilkan pesan khusus
+                if item['timestamp'] is None:
+                    timestamp_str = "Waktu tidak tercatat"
+                else:
+                    timestamp_str = item['timestamp'].strftime('%d %B %Y, %H:%M:%S')
+
+                col_icon, col_info = st.columns([0.1, 0.9])
+                
+                with col_icon:
+                    if item['tipe'] == 'notifikasi':
+                        st.markdown("<h3 style='text-align: center;'>🔔</h3>", unsafe_allow_html=True)
+                    else:
+                        st.markdown("<h3 style='text-align: center;'>📝</h3>", unsafe_allow_html=True)
+
+                with col_info:
+                    st.markdown(f"**{item['judul']}**")
+                    st.caption(timestamp_str)
+                    st.write(item['deskripsi'])
+                
+                st.divider()
+    else:
+        st.info("Belum ada riwayat notifikasi atau aktivitas yang tersimpan untuk Anda.")
+        
 def page_settings():
     user_id = st.session_state["user_info"]["user_id"]
     st.header("⚙️ Pengaturan Akun")
@@ -1214,8 +1270,8 @@ def main():
             page_jadwal_pelajaran()
         elif choice == "Manajemen Kelas":
             page_kelas_management()
-        elif choice == "Riwayat Notifikasi":
-            page_riwayat_notifikasi()
+        elif choice == "Riwayat":
+            page_riwayat_terpadu()
         elif choice == "Pengaturan Akun":
             page_settings()
 

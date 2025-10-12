@@ -744,3 +744,35 @@ COMMIT;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+
+DELIMITER $$
+
+CREATE TRIGGER log_update_pengingat_rev
+AFTER UPDATE ON pengingat
+FOR EACH ROW
+BEGIN
+    INSERT INTO riwayat_aktivitas (id_pengguna, jenis_aktivitas, deskripsi)
+    VALUES (
+        OLD.id_pembuat,
+        'Update Pengingat',
+        CONCAT('Judul pengingat (ID: ', OLD.id_pengingat, ') "', OLD.judul, '" sudah di di update')
+    );
+END$$
+
+DELIMITER ;
+
+DELIMITER $$
+
+CREATE TRIGGER log_delete_pengingat_rev
+AFTER DELETE ON pengingat
+FOR EACH ROW
+BEGIN
+    INSERT INTO riwayat_aktivitas (id_pengguna, jenis_aktivitas, deskripsi)
+    VALUES (
+        OLD.id_pembuat,
+        'Hapus Pengingat',
+        CONCAT('Pengingat dengan judul "', OLD.judul, '" (ID: ', OLD.id_pengingat, ') telah dihapus.')
+    );
+END$$
+
+DELIMITER ;
