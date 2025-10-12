@@ -38,6 +38,10 @@ SCOPES = ["openid", "https://www.googleapis.com/auth/userinfo.email", "https://w
 
 def get_user_by_email(db, email):
     return db.query(Pengguna).filter(Pengguna.email == email).first()
+def get_user_role_id(db, user_id):
+    """Mengambil ID peran (role ID) pengguna."""
+    user = db.query(Pengguna).filter(Pengguna.id_pengguna == user_id).first()
+    return user.id_peran if user else None
 
 def create_user(db, nama, email, password=None, from_google=False):
     role = db.query(Peran).filter(Peran.nama_peran == "siswa").first()
@@ -572,7 +576,7 @@ def page_kelas_management():
                         status = "Dibuat Anda" if is_creator else "Anggota"
                         st.write(f"**{kelas.nama_kelas}** ({status})")
                         st.write(f"Wali Kelas: {kelas.wali_kelas or 'Tidak Ada'}")
-                        st.write(f"Deskripsi: {kelas.deskripsi or 'Tidak Ada'}")
+                        st.write(f"Kode: `{kelas.kode_kelas}`")
                         
                         if not is_creator:
                             if st.button(f"Keluar dari Kelas", key=f"leave_{kelas.id_kelas}"):
@@ -1228,6 +1232,10 @@ def main():
         del st.session_state["reset_message"]
 
     query_params = st.query_params
+    
+    # -----------------------------------------------------------------
+    # --- BLOK 1: LOGIN GOOGLE (Menyimpan Role ID setelah berhasil) ---
+    # -----------------------------------------------------------------
     if "code" in query_params:
         flow = Flow.from_client_secrets_file(
             "client_secrets.json", scopes=SCOPES, redirect_uri=REDIRECT_URI
@@ -1246,6 +1254,11 @@ def main():
                 if not user:
                     user = create_user(db, user_name, user_email)
                 
+                # --- PERBAIKAN: Menyimpan Role ID ---
+                user_role_id = get_user_role_id(db, user.id_pengguna)
+                st.session_state["user_role_id"] = user_role_id
+                # ------------------------------------
+                
                 st.query_params.clear()
                 st.session_state["authentication_status"] = True
                 st.session_state["user_info"] = {"name": user_name, "email": user_email, "user_id": user.id_pengguna}
@@ -1254,6 +1267,9 @@ def main():
             st.error(f"Terjadi kesalahan saat otentikasi: {e}")
             st.query_params.clear()
     
+    # -----------------------------------------------------------------
+    # --- BLOK 2: SETELAH LOGIN (Memeriksa dan Memuat Role ID) ---
+    # -----------------------------------------------------------------
     if "authentication_status" not in st.session_state or st.session_state["authentication_status"] is None:
         tab1, tab2 = st.tabs(["Masuk", "Daftar"])
         with tab1:
@@ -1261,7 +1277,16 @@ def main():
         with tab2:
             register_ui()
     else:
+        # --- PERBAIKAN: Fallback Memuat Role ID Jika Hilang (Contoh: Setelah Rerun) ---
+        if "user_role_id" not in st.session_state:
+             with SessionLocal() as db:
+                 user_id = st.session_state["user_info"]["user_id"]
+                 st.session_state["user_role_id"] = get_user_role_id(db, user_id)
+        # -------------------------------------------------------------------------
+                 
         choice = navbar()
+        
+        # Logika routing
         if choice == "Chatbot":
             page_chatbot()
         elif choice == "Daftar Pengingat":
