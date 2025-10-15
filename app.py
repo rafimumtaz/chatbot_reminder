@@ -1,4 +1,3 @@
-        
 import streamlit as st
 from sqlalchemy import func
 import streamlit_authenticator as stauth
@@ -433,7 +432,7 @@ def page_jadwal_pelajaran():
                                 <p>{j.jam_mulai.strftime('%H:%M')} - {j.jam_selesai.strftime('%H:%M')}</p>
                             </div>
                             <div class="card-bottom">
-                                </div>
+                            </div>
                         </div>
                     """
                     with st.container():
@@ -1019,103 +1018,137 @@ def page_list():
             st.markdown('</div>', unsafe_allow_html=True)
 
 def page_riwayat_terpadu():
-    # Pastikan user_info ada di session_state
-    if "user_info" not in st.session_state:
-        st.warning("Silakan login terlebih dahulu.")
-        return
-
     user_id = st.session_state["user_info"]["user_id"]
+
+    # --- CSS Khusus untuk Halaman Riwayat ---
+    st.markdown("""
+    <style>
+        /* Mengatur agar kolom utama di header bisa sejajar vertikal */
+        div[data-testid="stHorizontalBlock"] {
+            align-items: center;
+        }
+        /* Tampilan Tanggal */
+        .date-display { flex-grow: 1; }
+        .date-display .date-text { font-size: 1.5rem; font-weight: bold; color: #31333F; margin: 0; }
+        .date-display .day-text { font-size: 1.1rem; color: #616161; margin: 0; }
+        /* Navigasi Tanggal (< Today >) */
+        .date-nav-controls { display: flex; align-items: center; justify-content: flex-end; }
+        .date-nav-controls .stButton>button {
+            background-color: #E0E0E0; color: #31333F; border: 1px solid #BDBDBD;
+            border-radius: 8px; margin: 0 3px !important; padding: 0.25rem 0.5rem;
+            width: 100%;
+        }
+        .date-nav-controls > div:nth-child(2) {
+            min-width: 110px;
+        }
+        /* Tampilan Daftar Riwayat */
+        .history-item {
+            background-color: #F0F2F6; border-radius: 10px; padding: 15px;
+            margin-bottom: 10px; display: flex; align-items: center;
+            border-left: 5px solid #616161;
+        }
+        .history-item-icon { font-size: 1.5rem; margin-right: 15px; }
+        .history-item-info p { margin: 0; padding: 0; }
+        .history-item-info .desc { font-size: 1rem; color: #31333F; }
+        .history-item-info .timestamp { font-size: 0.8rem; color: #616161; }
+    </style>
+    """, unsafe_allow_html=True)
+    
+    # --- State Management untuk Tanggal ---
+    if 'history_viewed_date' not in st.session_state:
+        st.session_state.history_viewed_date = date.today()
+
+    # --- Header Halaman ---
     st.header("⏳ Riwayat Terpadu")
-    st.caption("Menampilkan gabungan riwayat notifikasi dan aktivitas Anda.")
+    
+    date_col, nav_col = st.columns([0.6, 0.4])
+    with date_col:
+        viewed_date = st.session_state.history_viewed_date
+        day_map = {"Monday": "Senin", "Tuesday": "Selasa", "Wednesday": "Rabu", "Thursday": "Kamis", "Friday": "Jum'at", "Saturday": "Sabtu", "Sunday": "Minggu"}
+        month_map = {m: n for m, n in zip(range(1, 13), ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"])}
+        date_str = f"{viewed_date.day} {month_map[viewed_date.month]}, {viewed_date.year}"
+        day_str = day_map[viewed_date.strftime("%A")]
+        st.markdown(f'<div class="date-display"><p class="date-text">{date_str}</p><p class="day-text">{day_str}</p></div>', unsafe_allow_html=True)
 
-    # --- Tombol Hapus Riwayat ---
-    if st.button("🧹 Hapus Semua Riwayat", key="clear_all_history", type="primary"):
-        try:
-            with SessionLocal() as db:
-                db.query(Notifikasi).filter(Notifikasi.id_pengguna == user_id).delete(synchronize_session=False)
-                db.query(RiwayatAktivitas).filter(RiwayatAktivitas.id_pengguna == user_id).delete(synchronize_session=False)
-                db.commit()
-                st.success("Semua riwayat berhasil dibersihkan. Memuat ulang...")
-                st.rerun()
-        except Exception as e:
-            st.error(f"Terjadi kesalahan: {e}")
-
+    with nav_col:
+        st.markdown('<div class="date-nav-controls">', unsafe_allow_html=True)
+        c1, c2, c3 = st.columns([1, 1.5, 1])
+        if c1.button("⟨", key="history_prev_day", use_container_width=True):
+            st.session_state.history_viewed_date -= timedelta(days=1); st.rerun()
+        
+        today_date = date.today()
+        button_text = "Today" if viewed_date == today_date else "Tomorrow" if viewed_date == today_date + timedelta(days=1) else viewed_date.strftime("%d %b")
+        if c2.button(button_text, key="history_today", use_container_width=True):
+            st.session_state.history_viewed_date = today_date; st.rerun()
+        if c3.button("⟩", key="history_next_day", use_container_width=True):
+            st.session_state.history_viewed_date += timedelta(days=1); st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
+    
     st.divider()
 
-    # --- Logika untuk Mengambil dan Menggabungkan Data ---
+    # --- KUNCI PERBAIKAN: Mengambil dan Menggabungkan Data dari DUA TABEL ---
     combined_history = []
     with SessionLocal() as db:
-        # 1. Ambil data Riwayat Notifikasi
+        viewed_date = st.session_state.history_viewed_date
+        
+        # 1. Ambil data Riwayat Notifikasi DENGAN FILTER TANGGAL
         notifikasi_query = db.query(
-            Pengingat.judul,
-            Notifikasi.waktu_kirim,
-            Notifikasi.status,
-            Notifikasi.metode
-        ).join(
-            Pengingat, Notifikasi.id_pengingat == Pengingat.id_pengingat
+            Pengingat.judul, Notifikasi.waktu_kirim, Notifikasi.status, Notifikasi.metode
+        ).join(Pengingat, Notifikasi.id_pengingat == Pengingat.id_pengingat
         ).filter(
-            Notifikasi.id_pengguna == user_id
+            Notifikasi.id_pengguna == user_id,
+            func.date(Notifikasi.waktu_kirim) == viewed_date
         ).all()
 
         for row in notifikasi_query:
             combined_history.append({
-                "tipe": "notifikasi",
-                "timestamp": row.waktu_kirim,
-                "judul": f"Pengingat: {row.judul}",
-                "deskripsi": f"Status: **{row.status.value}** | Metode: **{row.metode.value}**"
+                "tipe": "notifikasi", "timestamp": row.waktu_kirim,
+                "judul": f"Notifikasi Terkirim",
+                "deskripsi": f"Untuk: '{row.judul}' | Status: {row.status.value}"
             })
 
-        # 2. Ambil data Riwayat Aktivitas
+        # 2. Ambil data Riwayat Aktivitas DENGAN FILTER TANGGAL
         aktivitas_query = db.query(
-            RiwayatAktivitas.jenis_aktivitas,
-            RiwayatAktivitas.deskripsi,
-            RiwayatAktivitas.waktu
+            RiwayatAktivitas.jenis_aktivitas, RiwayatAktivitas.deskripsi, RiwayatAktivitas.waktu
         ).filter(
-            RiwayatAktivitas.id_pengguna == user_id
+            RiwayatAktivitas.id_pengguna == user_id,
+            func.date(RiwayatAktivitas.waktu) == viewed_date
         ).all()
 
         for row in aktivitas_query:
             combined_history.append({
-                "tipe": "aktivitas",
-                "timestamp": row.waktu,
-                "judul": row.jenis_aktivitas,
+                "tipe": "aktivitas", "timestamp": row.waktu,
+                "judul": row.jenis_aktivitas.replace('_', ' ').title(),
                 "deskripsi": row.deskripsi
             })
 
     # --- Menampilkan Riwayat Gabungan ---
     if combined_history:
-        # 3. Urutkan semua riwayat berdasarkan waktu (timestamp) dari yang terbaru
-        # --- PERBAIKAN DI SINI ---
-        # Mengganti None dengan tanggal minimum agar bisa diurutkan
-        combined_history.sort(key=lambda item: item['timestamp'] if item['timestamp'] is not None else datetime.min, reverse=True)
-
-        st.subheader("Aktivitas Terbaru Anda")
-
-        # 4. Tampilkan dalam format feed (non-tabel)
+        combined_history.sort(key=lambda item: item['timestamp'], reverse=True)
+        
         for item in combined_history:
-            with st.container():
-                # Jika timestamp tidak ada, tampilkan pesan khusus
-                if item['timestamp'] is None:
-                    timestamp_str = "Waktu tidak tercatat"
-                else:
-                    timestamp_str = item['timestamp'].strftime('%d %B %Y, %H:%M:%S')
-
-                col_icon, col_info = st.columns([0.1, 0.9])
-                
-                with col_icon:
-                    if item['tipe'] == 'notifikasi':
-                        st.markdown("<h3 style='text-align: center;'>🔔</h3>", unsafe_allow_html=True)
-                    else:
-                        st.markdown("<h3 style='text-align: center;'>📝</h3>", unsafe_allow_html=True)
-
-                with col_info:
-                    st.markdown(f"**{item['judul']}**")
-                    st.caption(timestamp_str)
-                    st.write(item['deskripsi'])
-                
-                st.divider()
+            timestamp_str = item['timestamp'].strftime('%d %B %Y, %H:%M:%S')
+            if item['tipe'] == 'notifikasi':
+                icon = "🔔"
+            elif 'tambah' in item['judul'].lower():
+                icon = "➕"
+            elif 'hapus' in item['judul'].lower():
+                icon = "❌"
+            else:
+                icon = "📝" # Default
+            
+            st.markdown(f"""
+                <div class="history-item">
+                    <div class="history-item-icon">{icon}</div>
+                    <div class="history-item-info">
+                        <p class="desc"><b>{item['judul']}</b></p>
+                        <p class="desc">{item['deskripsi']}</p>
+                        <p class="timestamp">{timestamp_str}</p>
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
     else:
-        st.info("Belum ada riwayat notifikasi atau aktivitas yang tersimpan untuk Anda.")
+        st.info(f"Tidak ada riwayat untuk tanggal {viewed_date.strftime('%d %B %Y')}.")
         
 def page_settings():
     user_id = st.session_state["user_info"]["user_id"]
