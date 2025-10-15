@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Waktu pembuatan: 24 Sep 2025 pada 15.41
+-- Waktu pembuatan: 15 Okt 2025 pada 07.18
 -- Versi server: 10.4.32-MariaDB
 -- Versi PHP: 8.2.12
 
@@ -38,8 +38,9 @@ CREATE TABLE `anggota_kelas` (
 --
 
 INSERT INTO `anggota_kelas` (`id_anggota_kelas`, `id_kelas`, `id_pengguna`) VALUES
-(4, 1, 1),
-(1, 1, 2);
+(9, 3, 1),
+(7, 3, 2),
+(10, 4, 1);
 
 -- --------------------------------------------------------
 
@@ -87,6 +88,7 @@ INSERT INTO `jadwal_pelajaran` (`id_jadwal`, `id_pengguna`, `hari`, `nama_pelaja
 CREATE TABLE `kelas` (
   `id_kelas` int(11) NOT NULL,
   `nama_kelas` varchar(100) NOT NULL,
+  `wali_kelas` varchar(100) NOT NULL,
   `deskripsi` text DEFAULT NULL,
   `id_pembuat` int(11) NOT NULL,
   `kode_kelas` varchar(10) NOT NULL
@@ -96,8 +98,9 @@ CREATE TABLE `kelas` (
 -- Dumping data untuk tabel `kelas`
 --
 
-INSERT INTO `kelas` (`id_kelas`, `nama_kelas`, `deskripsi`, `id_pembuat`, `kode_kelas`) VALUES
-(1, '11-9', 'kelas gacor', 2, 'BE7718');
+INSERT INTO `kelas` (`id_kelas`, `nama_kelas`, `wali_kelas`, `deskripsi`, `id_pembuat`, `kode_kelas`) VALUES
+(3, 'Kelas 12-9', 'Ibu deni', 'Kelas informatika', 2, '67F27E'),
+(4, '11-9', 'Ibu deni', 'kelas tataboga', 2, 'BEF349');
 
 -- --------------------------------------------------------
 
@@ -131,40 +134,17 @@ CREATE TABLE `notifikasi` (
 --
 
 INSERT INTO `notifikasi` (`id_notifikasi`, `id_pengguna`, `id_pengingat`, `metode`, `waktu_kirim`, `status`) VALUES
-(26, 2, 26, 'email', '2025-09-15 23:07:27', 'terkirim'),
-(27, 2, 28, 'email', '2025-09-16 00:08:34', 'terkirim'),
-(28, 2, 27, 'email', '2025-09-16 00:09:37', 'terkirim'),
-(29, 3, 29, 'email', '2025-09-17 10:27:25', 'terkirim'),
-(30, 3, 30, 'email', '2025-09-17 10:34:28', 'terkirim'),
-(32, 2, 31, 'email', '2025-09-24 20:06:28', 'terkirim'),
-(34, 2, 32, 'email', '2025-09-24 20:20:33', 'terkirim'),
-(35, 1, 1, 'email', '2025-09-24 20:38:38', 'terkirim'),
-(36, 1, 2, 'email', '2025-09-24 20:38:38', 'terkirim'),
-(37, 1, 3, 'email', '2025-09-24 20:38:40', 'terkirim'),
-(38, 1, 4, 'email', '2025-09-24 20:38:41', 'terkirim'),
-(39, 1, 5, 'email', '2025-09-24 20:38:41', 'terkirim'),
-(40, 1, 6, 'email', '2025-09-24 20:38:42', 'terkirim'),
-(41, 1, 7, 'email', '2025-09-24 20:38:43', 'terkirim'),
-(42, 1, 8, 'email', '2025-09-24 20:38:44', 'terkirim'),
-(43, 1, 9, 'email', '2025-09-24 20:38:44', 'terkirim'),
-(44, 1, 10, 'email', '2025-09-24 20:38:45', 'terkirim'),
-(45, 1, 11, 'email', '2025-09-24 20:38:46', 'terkirim'),
-(46, 1, 12, 'email', '2025-09-24 20:38:47', 'terkirim'),
-(47, 1, 13, 'email', '2025-09-24 20:38:47', 'terkirim'),
-(48, 1, 14, 'email', '2025-09-24 20:38:48', 'terkirim'),
-(49, 1, 15, 'email', '2025-09-24 20:38:49', 'terkirim'),
-(50, 1, 16, 'email', '2025-09-24 20:38:50', 'terkirim'),
-(51, 1, 17, 'email', '2025-09-24 20:38:50', 'terkirim'),
-(52, 1, 18, 'email', '2025-09-24 20:38:51', 'terkirim'),
-(53, 1, 19, 'email', '2025-09-24 20:38:52', 'terkirim'),
-(54, 1, 20, 'email', '2025-09-24 20:38:52', 'terkirim'),
-(55, 1, 21, 'email', '2025-09-24 20:38:53', 'terkirim'),
-(56, 1, 22, 'email', '2025-09-24 20:38:54', 'terkirim'),
-(57, 1, 23, 'email', '2025-09-24 20:39:02', 'terkirim'),
-(58, 1, 24, 'email', '2025-09-24 20:39:11', 'terkirim'),
-(59, 1, 25, 'email', '2025-09-24 20:39:20', 'terkirim'),
-(60, 1, 31, 'email', '2025-09-24 20:39:29', 'terkirim'),
-(61, 1, 32, 'email', '2025-09-24 20:39:39', 'terkirim');
+(92, 2, 37, 'email', '2025-10-12 11:33:19', 'terkirim'),
+(93, 2, 38, 'email', '2025-10-12 11:33:19', 'terkirim'),
+(94, 2, 39, 'email', '2025-10-12 11:33:20', 'terkirim'),
+(95, 1, 40, 'email', '2025-10-12 11:33:21', 'terkirim'),
+(96, 2, 40, 'email', '2025-10-12 11:33:21', 'terkirim'),
+(97, 2, 41, 'email', '2025-10-12 11:33:22', 'terkirim'),
+(98, 1, 42, 'email', '2025-10-12 11:33:23', 'terkirim'),
+(99, 2, 43, 'email', '2025-10-12 11:33:23', 'terkirim'),
+(100, 1, 44, 'email', '2025-10-12 11:33:24', 'terkirim'),
+(101, 1, 45, 'email', '2025-10-12 11:33:25', 'terkirim'),
+(102, 1, 46, 'email', '2025-10-12 11:33:25', 'terkirim');
 
 -- --------------------------------------------------------
 
@@ -184,40 +164,17 @@ CREATE TABLE `penerima_pengingat` (
 --
 
 INSERT INTO `penerima_pengingat` (`id_penerima`, `id_pengingat`, `id_pengguna`, `status_pengiriman`) VALUES
-(1, 1, 1, 'terkirim'),
-(2, 2, 1, 'terkirim'),
-(3, 3, 1, 'terkirim'),
-(4, 4, 1, 'terkirim'),
-(5, 5, 1, 'terkirim'),
-(6, 6, 1, 'terkirim'),
-(7, 7, 1, 'terkirim'),
-(8, 8, 1, 'terkirim'),
-(9, 9, 1, 'terkirim'),
-(10, 10, 1, 'terkirim'),
-(11, 11, 1, 'terkirim'),
-(12, 12, 1, 'terkirim'),
-(13, 13, 1, 'terkirim'),
-(14, 14, 1, 'terkirim'),
-(15, 15, 1, 'terkirim'),
-(16, 16, 1, 'terkirim'),
-(17, 17, 1, 'terkirim'),
-(18, 18, 1, 'terkirim'),
-(19, 19, 1, 'terkirim'),
-(20, 20, 1, 'terkirim'),
-(21, 21, 1, 'terkirim'),
-(22, 22, 1, 'terkirim'),
-(23, 23, 1, 'terkirim'),
-(24, 24, 1, 'terkirim'),
-(25, 25, 1, 'terkirim'),
-(26, 26, 2, 'terkirim'),
-(27, 27, 2, 'terkirim'),
-(28, 28, 2, 'terkirim'),
-(29, 29, 3, 'terkirim'),
-(30, 30, 3, 'terkirim'),
-(31, 31, 1, 'terkirim'),
-(32, 31, 2, 'terkirim'),
-(33, 32, 1, 'terkirim'),
-(34, 32, 2, 'terkirim');
+(40, 37, 2, 'terkirim'),
+(41, 38, 2, 'terkirim'),
+(42, 39, 2, 'terkirim'),
+(43, 40, 1, 'terkirim'),
+(44, 40, 2, 'terkirim'),
+(45, 41, 2, 'terkirim'),
+(46, 42, 1, 'terkirim'),
+(47, 43, 2, 'terkirim'),
+(48, 44, 1, 'terkirim'),
+(49, 45, 1, 'terkirim'),
+(50, 46, 1, 'terkirim');
 
 -- --------------------------------------------------------
 
@@ -243,8 +200,10 @@ CREATE TABLE `pengguna` (
 
 INSERT INTO `pengguna` (`id_pengguna`, `id_peran`, `nama_lengkap`, `email`, `kata_sandi_hash`, `foto_profil`, `tanggal_dibuat`, `terakhir_login`, `verifikasi_email`) VALUES
 (1, 3, 'dhyos', 'drp022020@gmail.com', '$2b$12$qmxayiu0q..A01FmGtFsFOE1AF.OI5FvKMiBvES0.QSuVtAt46rlO', NULL, NULL, NULL, 0),
-(2, 3, '23-175 AHMAD DHIYAUDDIN', 'ptiutmdio@gmail.com', '$2b$12$SVyrh6dOAkKmXOOOrAU./.xOmoTqoAO4CZO1yabfLdeJvQT1CkN6y', NULL, '2025-09-15 23:05:33', NULL, 1),
-(3, 3, 'AHMAD DHIYAUDDIN-PURE', 'dpr012020@gmail.com', NULL, NULL, '2025-09-17 10:24:49', NULL, 1);
+(2, 2, '23-175 AHMAD DHIYAUDDIN', 'ptiutmdio@gmail.com', '$2b$12$SVyrh6dOAkKmXOOOrAU./.xOmoTqoAO4CZO1yabfLdeJvQT1CkN6y', NULL, '2025-09-15 23:05:33', NULL, 1),
+(3, 3, 'AHMAD DHIYAUDDIN-PURE', 'dpr012020@gmail.com', NULL, NULL, '2025-09-17 10:24:49', NULL, 1),
+(4, 3, 'chatbot reminder', 'chatbotremind@gmail.com', NULL, NULL, '2025-09-26 10:23:45', NULL, 1),
+(5, 3, 'dhass', 'dpr042020@gmail.com', '$2b$12$ANzfoE33WJ58keL6Rj71ie.bKRVcPRDauVjp5NIn71fhar/AWpn6q', NULL, '2025-10-02 14:19:05', NULL, 1);
 
 -- --------------------------------------------------------
 
@@ -272,38 +231,42 @@ CREATE TABLE `pengingat` (
 --
 
 INSERT INTO `pengingat` (`id_pengingat`, `id_pembuat`, `id_kelas`, `judul`, `deskripsi`, `tipe`, `tanggal_deadline`, `jam_deadline`, `berulang`, `status_pengiriman`, `dibuat_pada`, `diubah_pada`) VALUES
-(1, 1, NULL, 'Tugas matematika jam 11\'', 'ingatkan saya minggu depan saya ada tugas matematika jam 11\'', 'pribadi', '2025-08-23', '12:15:00', 0, 'terkirim', NULL, NULL),
-(2, 1, NULL, 'Tugas matematika jam 6', 'ingatkan saya minggu depan saya ada tugas matematika jam 6', 'pribadi', '2025-08-23', '12:15:00', 0, 'terkirim', NULL, NULL),
-(3, 1, NULL, 'tugas matematika', '-', 'pribadi', '2025-08-25', '15:00:00', 0, 'terkirim', '2025-08-23 14:57:07', NULL),
-(4, 1, NULL, 'tugas matematika', '-', 'pribadi', '2025-08-25', '14:59:00', 0, 'terkirim', '2025-08-23 14:57:36', NULL),
-(5, 1, NULL, 'tugas matematika', '-', 'pribadi', '2025-08-26', '15:01:00', 0, 'terkirim', '2025-08-23 14:58:44', NULL),
-(6, 1, NULL, 'tugas matematika', '-', 'pribadi', '2025-08-26', '15:30:00', 0, 'terkirim', '2025-08-23 15:28:40', NULL),
-(7, 1, NULL, 'tugas matematika', '-', 'pribadi', '2025-08-24', '15:30:00', 0, 'terkirim', '2025-08-23 15:31:54', NULL),
-(8, 1, NULL, 'tugas matematika', '-', 'pribadi', '2025-08-24', '15:33:00', 0, 'terkirim', '2025-08-23 15:32:25', NULL),
-(9, 1, NULL, 'Tugas matematika jam 10', 'ingatkan saya minggu depan saya ada tugas matematika jam 10', 'pribadi', '2025-09-13', '08:15:00', 0, 'terkirim', NULL, NULL),
-(10, 1, NULL, 'Tugas matematika jam 10', 'ingatkan saya minggu depan saya ada tugas matematika jam 10', 'pribadi', '2025-09-20', '10:00:00', 0, 'terkirim', NULL, NULL),
-(11, 1, NULL, 'Tugas matematika jam 4', 'ingatkan saya minggu depan saya ada tugas matematika jam 4', 'pribadi', '2025-09-20', '04:00:00', 0, 'terkirim', NULL, NULL),
-(12, 1, NULL, 'Tugas matematika jam 4 lewat 15', 'ingatkan saya minggu depan saya ada tugas matematika jam 4 lewat 15', 'pribadi', '2025-09-20', '04:00:00', 0, 'terkirim', NULL, NULL),
-(13, 1, NULL, 'Tugas matematika jam 4 lewat 15 menit', 'ingatkan saya minggu depan saya ada tugas matematika jam 4 lewat 15 menit', 'pribadi', '2025-09-20', '04:00:00', 0, 'terkirim', NULL, NULL),
-(14, 1, NULL, 'Tugas matematika 04:12', 'ingatkan saya minggu depan saya ada tugas matematika 04:12', 'pribadi', '2025-09-20', '10:45:12', 0, 'terkirim', NULL, NULL),
-(15, 1, NULL, 'Tugas matematika jam 04:12', 'ingatkan saya minggu depan saya ada tugas matematika jam 04:12', 'pribadi', '2025-09-20', '04:12:00', 0, 'terkirim', NULL, NULL),
-(16, 1, NULL, 'Tugas matematika jam 10', 'ingatkan saya besok saya ada tugas matematika jam 10', 'pribadi', '2025-09-14', '10:00:00', 0, 'terkirim', NULL, NULL),
-(17, 1, NULL, 'Tugas matematika jam 10', 'ingatkan saya besok saya ada tugas matematika jam 10', 'pribadi', '2025-09-14', '10:00:00', 0, 'terkirim', NULL, NULL),
-(18, 1, NULL, 'Tugas matematika jam 10', 'ingatkan saya besok saya ada tugas matematika jam 10', 'pribadi', '2025-09-14', '10:00:00', 0, 'terkirim', NULL, NULL),
-(19, 1, NULL, 'Tugas matematika jam 10', 'ingatkan saya besok saya ada tugas matematika jam 10', 'pribadi', '2025-09-14', '10:00:00', 0, 'terkirim', NULL, NULL),
-(20, 1, NULL, 'Tugas matematika jam 10', 'ingatkan saya besok saya ada tugas matematika jam 10', 'pribadi', '2025-09-14', '10:00:00', 0, 'terkirim', NULL, NULL),
-(21, 1, NULL, 'Tugas matematika jam 10', 'ingatkan saya besok saya ada tugas matematika jam 10', 'pribadi', '2025-09-14', '10:00:00', 0, 'terkirim', NULL, NULL),
-(22, 1, NULL, 'Tugas matematika jam 10', 'ingatkan saya besok saya ada tugas matematika jam 10', 'pribadi', '2025-09-14', '10:00:00', 0, 'terkirim', NULL, NULL),
-(23, 1, NULL, 'Tugas matematika jam 10', 'ingatkan saya besok saya ada tugas matematika jam 10', 'pribadi', '2025-09-14', '10:00:00', 0, 'terkirim', NULL, NULL),
-(24, 1, NULL, 'Tugas matematika jam 10', 'ingatkan saya besok saya ada tugas matematika jam 10', 'pribadi', '2025-09-14', '10:00:00', 0, 'terkirim', NULL, NULL),
-(25, 1, NULL, 'Tugas matematika jam 10', 'Ingatkan saya besok saya ada tugas matematika jam 10', 'pribadi', '2025-09-16', '10:00:00', 0, 'terkirim', NULL, NULL),
-(26, 2, NULL, 'Tugas matematika jam 10', 'Ingatkan saya besok saya ada tugas matematika jam 10', 'pribadi', '2025-09-16', '10:00:00', 0, 'terkirim', NULL, NULL),
-(27, 2, NULL, 'Menggunakan Seragam Pramuka', 'Besok saya harus menggunakan seragam pramuka', 'pribadi', '2025-09-17', '08:30:00', 0, 'terkirim', NULL, NULL),
-(28, 2, NULL, 'Mengajar Kelas Matematika', 'Mengajar kelas matematika', 'pribadi', '2024-01-26', '08:15:00', 0, 'terkirim', NULL, NULL),
-(29, 3, NULL, 'Menggunakan Baju Tradisional', 'Memakai baju tradisional untuk memperingati hari kemerdekaan Indonesia', 'pribadi', '2024-08-16', '00:00:00', 0, 'terkirim', NULL, NULL),
-(30, 3, NULL, 'Memakai Baju Tradisional', 'Menggunakan baju tradisional untuk memperingati hari kemerdekaan Indonesia', 'pribadi', '2025-09-18', '07:00:00', 0, 'terkirim', NULL, NULL),
-(31, 1, 1, 'Tugas Matematika', 'Tugas matematika', 'pribadi', '2025-09-25', '07:00:00', 0, 'terkirim', NULL, NULL),
-(32, 2, 1, 'Tugas IPA', 'Tugas IPA', 'pribadi', '2025-09-25', '07:00:00', 0, 'terkirim', NULL, NULL);
+(37, 2, NULL, 'Tugas Matematika', 'ingatkan saya besok ada tugas matematika untuk kelas 12-9', 'kelas 12-9', '2025-10-01', '07:00:00', 0, 'terkirim', NULL, NULL),
+(38, 2, NULL, 'Tugas Matematika', 'ingatkan saya besok ada tugas matematika untuk kelas 12-9', 'kelas 12-9', '2025-10-05', '07:00:00', 0, 'terkirim', NULL, NULL),
+(39, 2, NULL, 'Tugas Matematika', 'ingatkan saya besok ada tugas matematika untuk kelas 12-9', 'kelas 12-9', '2025-10-09', '07:00:00', 0, 'terkirim', NULL, NULL),
+(40, 2, 3, 'Tugas Matematika', 'ingatkan saya besok ada tugas matematika untuk kelas 12-9', 'kelas 12-9', '2025-10-09', '07:00:00', 0, 'terkirim', NULL, NULL),
+(41, 2, NULL, 'Tugas Matematika', 'ingatkan saya besok ada tugas matematika untuk kelas 11-9', 'pribadi', '2025-10-09', '07:00:00', 0, 'terkirim', NULL, NULL),
+(42, 2, 4, 'tugas matematika', 'ingatkan saya besok ada tugas matematika untuk 11-9', '11-9', '2025-10-09', '07:00:00', 0, 'terkirim', NULL, NULL),
+(43, 2, NULL, 'Tugas Matematika', 'Ada tugas matematika untuk kelas 11-9', 'Pribadi', '2025-10-09', '07:00:00', 0, 'terkirim', NULL, NULL),
+(44, 2, 4, 'Tugas Matematika', 'ingatkan saya besok ada tugas matematika untuk kelas 11-9', '11-9', '2025-10-09', '07:00:00', 0, 'terkirim', NULL, NULL),
+(45, 2, 4, 'Tugas IPA', 'ingatkan saya besok ada tugas ipa untuk kelas 11-9', '11-9', '2025-10-09', '07:00:00', 0, 'terkirim', NULL, NULL),
+(46, 1, 4, 'Tugas IPA', 'ingatkan saya besok ada tugas ipa untuk kelas 11-9', '11-9', '2025-10-08', '07:00:00', 0, 'terkirim', NULL, NULL);
+
+--
+-- Trigger `pengingat`
+--
+DELIMITER $$
+CREATE TRIGGER `log_delete_pengingat_rev` AFTER DELETE ON `pengingat` FOR EACH ROW BEGIN
+    INSERT INTO riwayat_aktivitas (id_pengguna, jenis_aktivitas, deskripsi)
+    VALUES (
+        OLD.id_pembuat,
+        'Hapus Pengingat',
+        CONCAT('Pengingat dengan judul "', OLD.judul, '" (ID: ', OLD.id_pengingat, ') telah dihapus.')
+    );
+END
+$$
+DELIMITER ;
+DELIMITER $$
+CREATE TRIGGER `log_update_pengingat_rev` AFTER UPDATE ON `pengingat` FOR EACH ROW BEGIN
+    INSERT INTO riwayat_aktivitas (id_pengguna, jenis_aktivitas, deskripsi)
+    VALUES (
+        OLD.id_pembuat,
+        'Update Pengingat',
+        CONCAT('Judul pengingat (ID: ', OLD.id_pengingat, ') "', OLD.judul, '" sudah di di update')
+    );
+END
+$$
+DELIMITER ;
 
 -- --------------------------------------------------------
 
@@ -394,7 +357,29 @@ INSERT INTO `riwayat_aktivitas` (`id_aktivitas`, `id_pengguna`, `jenis_aktivitas
 (23, 3, 'tambah_pengingat', 'Chatbot: Menggunakan Baju Tradisional', NULL),
 (24, 3, 'tambah_pengingat', 'Chatbot: Memakai Baju Tradisional', NULL),
 (25, 1, 'tambah_pengingat', 'Chatbot: Tugas Matematika (11-9)', NULL),
-(26, 2, 'tambah_pengingat', 'Chatbot: Tugas IPA (11-9)', NULL);
+(26, 2, 'tambah_pengingat', 'Chatbot: Tugas IPA (11-9)', NULL),
+(27, 2, 'tambah_pengingat', 'Chatbot: Tugas Matematika (11-9)', NULL),
+(28, 5, 'tambah_pengingat', 'Chatbot: Tugas Matematika (Pribadi)', NULL),
+(29, 2, 'tambah_pengingat', 'Chatbot: Tugas matematika (Pribadi)', NULL),
+(30, 2, 'tambah_pengingat', 'Chatbot: Tugas Matematika (Pribadi)', NULL),
+(31, 2, 'tambah_pengingat', 'Chatbot: Tugas Matematika (Pribadi)', NULL),
+(32, 2, 'tambah_pengingat', 'Chatbot: Tugas Matematika (Pribadi)', NULL),
+(33, 2, 'tambah_pengingat', 'Chatbot: Tugas Matematika (Pribadi)', NULL),
+(34, 2, 'tambah_pengingat', 'Chatbot: Tugas Matematika (Tujuan: Kelas 12-9)', NULL),
+(35, 2, 'tambah_pengingat', 'Chatbot: Tugas Matematika (Tujuan: Pribadi)', NULL),
+(36, 2, 'tambah_pengingat', 'Chatbot: tugas matematika (Tujuan: 11-9)', NULL),
+(37, 2, 'tambah_pengingat', 'Chatbot: Tugas Matematika (Tujuan: Pribadi)', NULL),
+(38, 2, 'tambah_pengingat', 'Chatbot: Tugas Matematika (Tujuan: 11-9)', NULL),
+(39, 2, 'tambah_pengingat', 'Chatbot: Tugas IPA (Tujuan: 11-9)', NULL),
+(40, 1, 'tambah_pengingat', 'Chatbot: Tugas IPA (Tujuan: 11-9)', NULL),
+(41, 2, 'Update Pengingat', 'Judul pengingat (ID: 36) diubah dari \"Tugas Matematika\" menjadi \"Tugas Matematika\".', '2025-10-12 11:55:56'),
+(42, 2, 'Hapus Pengingat', 'Pengingat dengan judul \"Tugas Matematika\" (ID: 36) telah dihapus.', '2025-10-12 11:57:50'),
+(43, 2, 'tambah_pengingat', 'Chatbot: Tugas IPA (Tujuan: Pribadi)', '2025-10-12 12:02:36'),
+(44, 2, 'Update Pengingat', 'Judul pengingat (ID: 47) diubah dari \"Tugas IPA\" menjadi \"Tugas IPA\".', '2025-10-12 12:03:05'),
+(45, 2, 'Hapus Pengingat', 'Pengingat dengan judul \"Tugas IPA\" (ID: 47) telah dihapus.', '2025-10-12 12:03:26'),
+(46, 2, 'Update Pengingat', 'Judul pengingat (ID: 37) diubah dari \"Tugas Matematika\" menjadi \"Tugas Matematika\".', '2025-10-12 12:21:04'),
+(47, 2, 'Update Pengingat', 'Judul pengingat (ID: 37) diubah dari \"Tugas Matematika\" menjadi \"Tugas Matematika\".', '2025-10-12 12:21:33'),
+(48, 2, 'Update Pengingat', 'Judul pengingat (ID: 37) \"Tugas Matematika\" sudah di di update \"', '2025-10-12 12:39:30');
 
 -- --------------------------------------------------------
 
@@ -561,7 +546,7 @@ ALTER TABLE `tag`
 -- AUTO_INCREMENT untuk tabel `anggota_kelas`
 --
 ALTER TABLE `anggota_kelas`
-  MODIFY `id_anggota_kelas` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id_anggota_kelas` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT untuk tabel `arsip_pengingat`
@@ -579,7 +564,7 @@ ALTER TABLE `jadwal_pelajaran`
 -- AUTO_INCREMENT untuk tabel `kelas`
 --
 ALTER TABLE `kelas`
-  MODIFY `id_kelas` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id_kelas` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT untuk tabel `lampiran_pengingat`
@@ -591,25 +576,25 @@ ALTER TABLE `lampiran_pengingat`
 -- AUTO_INCREMENT untuk tabel `notifikasi`
 --
 ALTER TABLE `notifikasi`
-  MODIFY `id_notifikasi` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=62;
+  MODIFY `id_notifikasi` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=103;
 
 --
 -- AUTO_INCREMENT untuk tabel `penerima_pengingat`
 --
 ALTER TABLE `penerima_pengingat`
-  MODIFY `id_penerima` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=35;
+  MODIFY `id_penerima` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=52;
 
 --
 -- AUTO_INCREMENT untuk tabel `pengguna`
 --
 ALTER TABLE `pengguna`
-  MODIFY `id_pengguna` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id_pengguna` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT untuk tabel `pengingat`
 --
 ALTER TABLE `pengingat`
-  MODIFY `id_pengingat` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=33;
+  MODIFY `id_pengingat` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=48;
 
 --
 -- AUTO_INCREMENT untuk tabel `peran`
@@ -627,7 +612,7 @@ ALTER TABLE `pesan_chatbot`
 -- AUTO_INCREMENT untuk tabel `riwayat_aktivitas`
 --
 ALTER TABLE `riwayat_aktivitas`
-  MODIFY `id_aktivitas` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
+  MODIFY `id_aktivitas` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=49;
 
 --
 -- AUTO_INCREMENT untuk tabel `riwayat_pengingat`
@@ -687,7 +672,7 @@ ALTER TABLE `lampiran_pengingat`
 --
 ALTER TABLE `notifikasi`
   ADD CONSTRAINT `notifikasi_ibfk_1` FOREIGN KEY (`id_pengguna`) REFERENCES `pengguna` (`id_pengguna`),
-  ADD CONSTRAINT `notifikasi_ibfk_2` FOREIGN KEY (`id_pengingat`) REFERENCES `pengingat` (`id_pengingat`);
+  ADD CONSTRAINT `notifikasi_ibfk_2` FOREIGN KEY (`id_pengingat`) REFERENCES `pengingat` (`id_pengingat`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Ketidakleluasaan untuk tabel `penerima_pengingat`
@@ -706,7 +691,7 @@ ALTER TABLE `pengguna`
 -- Ketidakleluasaan untuk tabel `pengingat`
 --
 ALTER TABLE `pengingat`
-  ADD CONSTRAINT `pengingat_ibfk_1` FOREIGN KEY (`id_pembuat`) REFERENCES `pengguna` (`id_pengguna`),
+  ADD CONSTRAINT `pengingat_ibfk_1` FOREIGN KEY (`id_pembuat`) REFERENCES `pengguna` (`id_pengguna`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `pengingat_ibfk_2` FOREIGN KEY (`id_kelas`) REFERENCES `kelas` (`id_kelas`);
 
 --
@@ -744,35 +729,3 @@ COMMIT;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
-
-DELIMITER $$
-
-CREATE TRIGGER log_update_pengingat_rev
-AFTER UPDATE ON pengingat
-FOR EACH ROW
-BEGIN
-    INSERT INTO riwayat_aktivitas (id_pengguna, jenis_aktivitas, deskripsi)
-    VALUES (
-        OLD.id_pembuat,
-        'Update Pengingat',
-        CONCAT('Judul pengingat (ID: ', OLD.id_pengingat, ') "', OLD.judul, '" sudah di di update')
-    );
-END$$
-
-DELIMITER ;
-
-DELIMITER $$
-
-CREATE TRIGGER log_delete_pengingat_rev
-AFTER DELETE ON pengingat
-FOR EACH ROW
-BEGIN
-    INSERT INTO riwayat_aktivitas (id_pengguna, jenis_aktivitas, deskripsi)
-    VALUES (
-        OLD.id_pembuat,
-        'Hapus Pengingat',
-        CONCAT('Pengingat dengan judul "', OLD.judul, '" (ID: ', OLD.id_pengingat, ') telah dihapus.')
-    );
-END$$
-
-DELIMITER ;

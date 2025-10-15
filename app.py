@@ -541,7 +541,6 @@ def page_kelas_management():
         st.markdown("### 🧑‍🎓 Kelas Anda")
         with st.container(border=True):
             st.subheader("Bergabung dengan Kelas Baru")
-            st.info("Anda hanya dapat bergabung dengan satu kelas aktif.")
             
             with st.form("form_join_kelas_universal", clear_on_submit=True):
                 kode_kelas = st.text_input("Kode Kelas", placeholder="Masukkan 6 digit kode kelas")
