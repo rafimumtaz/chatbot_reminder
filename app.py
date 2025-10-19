@@ -252,11 +252,11 @@ def navbar():
         selected = option_menu(
             menu_title=None,
             options=[
-                "Chatbot", "Daftar Pengingat", "Jadwal Pelajaran",
+                "Chatbot", "Daftar Pengingat",
                 "Manajemen Kelas", "Riwayat", "Pengaturan Akun", "Logout"
             ],
             icons=[
-                "chat-dots", "list-task", "book", "grid",
+                "chat-dots", "list-task", "grid",
                 "clock-history", "gear", "box-arrow-right"
             ],
             default_index=0,
@@ -385,7 +385,7 @@ def page_jadwal_pelajaran():
 
     # --- Form Tambah Jadwal ---
     if st.session_state.show_jadwal_form:
-        with st.expander("➕ Tambah Jadwal Baru", expanded=True):
+        with st.expander("Tambah Jadwal Baru", expanded=True):
             with st.form("form_tambah_jadwal", clear_on_submit=True):
                 hari_options = [h.value for h in Hari]
                 display_hari_options = [h.capitalize() for h in hari_options]
@@ -451,83 +451,206 @@ def page_kelas_management():
     user_id = st.session_state["user_info"]["user_id"]
     user_role_id = st.session_state.get("user_role_id")
     is_guru = user_role_id == 2
-    
-    st.header("🏢 Manajemen Kelas")
-    
-    # ----------------------------------------------------
-    # --- BAGIAN 1: Fungsionalitas Guru (Membuat & Mengelola) ---
-    # ----------------------------------------------------
-    if is_guru:
-        st.markdown("### 👩‍🏫 Akses Guru: Buat dan Kelola")
-        tab1, tab2 = st.tabs(["Buat Kelas Baru", "Kelola Anggota"])
 
-        # TAB 1: Buat Kelas Baru (TERMASUK DAFTAR KELAS AKTIF GURU)
-        with tab1:
-            st.subheader("Buat Kelas")
-            with st.form("form_buat_kelas", clear_on_submit=True):
-                nama_kelas = st.text_input("Nama Kelas (Contoh: IPA Kelas X-A)")
-                wali_kelas = st.text_input("Nama Wali Kelas", placeholder="Masukkan nama wali kelas")
-                deskripsi = st.text_area("Deskripsi Kelas (Opsional)")
-                submitted = st.form_submit_button("Buat Kelas")
+    # --- CSS Khusus untuk Halaman Manajemen Kelas ---
+    st.markdown("""
+    <style>
+        /* ... (CSS tidak berubah) ... */
+        .class-grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+        .class-card {
+            background-color: #F0F2F6;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            border: 1px solid #E0E0E0;
+        }
+        .class-card .card-top {
+            background-color: #616161; color: white; padding: 15px;
+        }
+        .card-top h5, .card-top p { margin: 0; padding: 0; }
+        .card-top h5 { font-size: 1.1rem; margin-bottom: 5px; }
+        .card-top p { font-size: 0.9rem; opacity: 0.9; }
+        .class-card .card-bottom { padding: 10px 15px; }
+        .class-card .stButton>button { width: 100%; }
+        .detail-header {
+            background-color: #616161; color: white; border-radius: 12px;
+            padding: 2rem; margin-bottom: 2rem;
+        }
+        .detail-header h2, .detail-header p { margin: 0; }
+        .announcement-item, .member-item {
+            background-color: #F0F2F6; border-radius: 10px; padding: 15px;
+            margin-bottom: 10px;
+        }
+        .member-item { display: flex; justify-content: space-between; align-items: center; }
+    </style>
+    """, unsafe_allow_html=True)
 
-                if submitted:
-                    if nama_kelas and wali_kelas:
-                        with SessionLocal() as db:
-                            success, message = create_new_class(db, user_id, nama_kelas, deskripsi, wali_kelas) 
-                            if success:
-                                st.success(message)
-                                st.rerun()
-                            else:
-                                st.error(message)
-                    else:
-                        st.error("Nama kelas dan Nama Wali Kelas tidak boleh kosong.")
-                        
-            st.markdown("---")
-            # --- DAFTAR KELAS AKTIF GURU (BARU) ---
-            st.markdown("##### Kelas Aktif:")
-            with SessionLocal() as db:
-                kelas_dibuat = db.query(Kelas).filter(Kelas.id_pembuat == user_id).all()
-                if kelas_dibuat:
-                    for kelas in kelas_dibuat:
-                         with st.container(border=True):
-                            st.write(f"**{kelas.nama_kelas}** (Kode: `{kelas.kode_kelas}`)")
-                            st.write(f"Wali Kelas: {kelas.wali_kelas or 'Tidak Ada'}")
-                else:
-                    st.info("Anda belum membuat kelas.")
-            # --- END DAFTAR KELAS AKTIF GURU ---
-                        
-        # TAB 2: Kelola Anggota (Hanya Guru)
-        with tab2:
-            st.subheader("Kelola Anggota Kelas Anda")
-            st.info("Anda hanya dapat mengeluarkan anggota dari kelas yang Anda buat.")
-            
-            with SessionLocal() as db:
-                kelas_dibuat = db.query(Kelas).filter(Kelas.id_pembuat == user_id).all()
-                
-                if kelas_dibuat:
-                    for kelas in kelas_dibuat:
-                        with st.expander(f"**{kelas.nama_kelas}** ({kelas.kode_kelas})"):
-                            st.write(f"Wali Kelas: **{kelas.wali_kelas or 'Tidak Ada'}**")
-                            st.markdown("---")
-                            
-                            st.markdown("##### Anggota Kelas:")
-                            anggota_list = db.query(Pengguna, AnggotaKelas).join(AnggotaKelas, AnggotaKelas.id_pengguna == Pengguna.id_pengguna).filter(AnggotaKelas.id_kelas == kelas.id_kelas).all()
-                            
-                            for pengguna, anggota in anggota_list:
-                                if pengguna.id_pengguna == user_id:
-                                    st.write(f"✅ **{pengguna.nama_lengkap}** ({pengguna.email}) - Anda (Pembuat)")
-                                    continue
-                                    
-                                colX, colY = st.columns([0.7, 0.3])
-                                colX.write(f"▪️ {pengguna.nama_lengkap} ({pengguna.email})")
-                                
-                                if colY.button("Keluarkan", key=f"kick_{anggota.id_anggota_kelas}"):
-                                    db.delete(anggota)
-                                    db.commit()
-                                    st.success(f"Anggota {pengguna.nama_lengkap} dikeluarkan.")
+    # State management untuk navigasi
+    if 'class_view' not in st.session_state:
+        st.session_state.class_view = 'main'
+    if 'selected_class_id' not in st.session_state:
+        st.session_state.selected_class_id = None
+
+    def set_view(view, class_id=None):
+        st.session_state.class_view = view
+        st.session_state.selected_class_id = class_id
+
+    def toggle_create_form():
+        st.session_state.show_create_form = not st.session_state.get("show_create_form", False)
+
+    # Tampilan Utama (Grid Kelas)
+    if st.session_state.class_view == 'main':
+        cols = st.columns([0.7, 0.3])
+        with cols[0]:
+            st.header("Manajemen Kelas")
+        with cols[1]:
+            st.button("＋ Buat Kelas", use_container_width=True, on_click=toggle_create_form)
+
+        if st.session_state.get("show_create_form", False):
+            if st.dialog("Buat Kelas Baru"):
+                with st.form("form_buat_kelas_popup", clear_on_submit=True):
+                    nama_kelas = st.text_input("Nama Kelas (Contoh: IPA Kelas X-A)")
+                    wali_kelas = st.text_input("Nama Wali Kelas")
+                    deskripsi = st.text_area("Deskripsi Kelas (Opsional)")
+                    if st.form_submit_button("Buat Kelas", type="primary"):
+                        if nama_kelas and wali_kelas:
+                            with SessionLocal() as db:
+                                success, message = create_new_class(db, user_id, nama_kelas, deskripsi, wali_kelas)
+                                if success:
+                                    st.success(message)
+                                    st.session_state.show_create_form = False
                                     st.rerun()
-                else:
-                    st.info("Anda belum membuat kelas.")
+                                else:
+                                    st.error(message)
+                        else:
+                            st.error("Nama Kelas dan Wali Kelas wajib diisi.")
+        
+        st.markdown("---")
+        
+        with SessionLocal() as db:
+            kelas_dibuat = db.query(Kelas).filter(Kelas.id_pembuat == user_id).all()
+        
+        if not kelas_dibuat:
+            st.info("Anda belum membuat kelas. Klik tombol '+ Buat Kelas' untuk memulai.")
+        else:
+            st.markdown('<div class="class-grid-container">', unsafe_allow_html=True)
+            for kelas in kelas_dibuat:
+                st.markdown('<div class="class-card">', unsafe_allow_html=True)
+                st.markdown(f"""
+                    <div class="card-top">
+                        <h5>{kelas.nama_kelas}</h5>
+                        <p>{kelas.wali_kelas}</p>
+                    </div>
+                """, unsafe_allow_html=True)
+                with st.container():
+                    if st.button("Lihat Detail", key=f"detail_{kelas.id_kelas}", on_click=set_view, args=('detail', kelas.id_kelas)):
+                        pass
+                st.markdown('</div>', unsafe_allow_html=True)
+            st.markdown('</div>', unsafe_allow_html=True)
+
+    # Tampilan Detail Kelas
+    elif st.session_state.class_view == 'detail':
+        class_id = st.session_state.selected_class_id
+        with SessionLocal() as db:
+            kelas = db.query(Kelas).get(class_id)
+        
+        c1, c2 = st.columns([0.7, 0.3])
+        with c1:
+            if st.button("← Kembali", on_click=set_view, args=('main',)):
+                pass
+        with c2:
+            if st.button("Hapus Kelas", type="primary", use_container_width=True):
+                with SessionLocal() as db:
+                    db.query(AnggotaKelas).filter(AnggotaKelas.id_kelas == class_id).delete()
+                    db.query(Pengingat).filter(Pengingat.id_kelas == class_id).delete()
+                    db.delete(kelas)
+                    db.commit()
+                st.success(f"Kelas '{kelas.nama_kelas}' berhasil dihapus.")
+                set_view('main')
+                st.rerun()
+        
+        st.markdown(f"""
+            <div class="detail-header">
+                <h2>{kelas.nama_kelas}</h2>
+                <p>Wali Kelas: {kelas.wali_kelas}</p>
+            </div>
+        """, unsafe_allow_html=True)
+
+        tab1, tab2 = st.tabs(["Pengumuman", "Kelola Anggota"])
+
+        with tab1:
+            st.subheader("Buat Pengumuman Baru")
+            with st.form("form_new_announcement", clear_on_submit=True):
+                judul = st.text_input("Judul Pengumuman")
+                deskripsi = st.text_area("Isi Pengumuman")
+                tanggal = st.date_input("Tanggal Terkait (Opsional)")
+                jam = st.time_input("Jam Terkait (Opsional)")
+                if st.form_submit_button("Kirim Pengumuman", type="primary"):
+                    with SessionLocal() as db:
+                        new_pengingat = Pengingat(
+                            id_pembuat=user_id, id_kelas=class_id, judul=judul,
+                            deskripsi=deskripsi, tanggal_deadline=tanggal, jam_deadline=jam,
+                            tipe='Pengumuman'
+                        )
+                        db.add(new_pengingat); db.commit(); db.refresh(new_pengingat)
+                        anggota = db.query(AnggotaKelas.id_pengguna).filter(AnggotaKelas.id_kelas == class_id).all()
+                        for a in anggota:
+                            db.add(PenerimaPengingat(id_pengingat=new_pengingat.id_pengingat, id_pengguna=a.id_pengguna))
+                        db.commit()
+                        st.success("Pengumuman berhasil dikirim.")
+                        st.rerun()
+            
+            st.markdown("---")
+            st.subheader("Daftar Pengumuman Terkirim")
+            with SessionLocal() as db:
+                pengumuman_list = db.query(Pengingat).filter(Pengingat.id_kelas == class_id).order_by(Pengingat.dibuat_pada.desc()).all()
+            
+            if not pengumuman_list:
+                st.info("Belum ada pengumuman di kelas ini.")
+            else:
+                for p in pengumuman_list:
+                    # --- PERBAIKAN DI SINI ---
+                    # Cek dulu apakah p.dibuat_pada ada isinya atau tidak
+                    if p.dibuat_pada:
+                        timestamp_str = p.dibuat_pada.strftime('%d %b %Y, %H:%M')
+                    else:
+                        timestamp_str = "Waktu tidak tercatat" # Teks pengganti jika tanggal kosong
+                    # ---------------------------
+
+                    st.markdown(f"""
+                        <div class="announcement-item">
+                            <b>{p.judul}</b>
+                            <p>{p.deskripsi}</p>
+                            <small>Diposting pada {timestamp_str}</small>
+                        </div>
+                    """, unsafe_allow_html=True)
+
+        with tab2:
+            st.subheader("Daftar Anggota Kelas")
+            with SessionLocal() as db:
+                anggota_list = db.query(Pengguna, AnggotaKelas).join(AnggotaKelas, AnggotaKelas.id_pengguna == Pengguna.id_pengguna).filter(AnggotaKelas.id_kelas == class_id).all()
+
+            if not anggota_list:
+                st.info("Belum ada anggota di kelas ini.")
+            else:
+                for pengguna, anggota in anggota_list:
+                    if pengguna.id_pengguna == user_id: continue
+                    
+                    st.markdown(f"""
+                        <div class="member-item">
+                            <span>{pengguna.nama_lengkap} ({pengguna.email})</span>
+                        </div>
+                    """, unsafe_allow_html=True)
+                    if st.button("Keluarkan", key=f"kick_{anggota.id_anggota_kelas}"):
+                        with SessionLocal() as db:
+                            db.delete(anggota)
+                            db.commit()
+                        st.success(f"Anggota {pengguna.nama_lengkap} berhasil dikeluarkan.")
+                        st.rerun()
 
         st.markdown("---")
     
@@ -1059,7 +1182,7 @@ def page_riwayat_terpadu():
         st.session_state.history_viewed_date = date.today()
 
     # --- Header Halaman ---
-    st.header("⏳ Riwayat Terpadu")
+    st.header("Riwayat Terpadu")
     
     date_col, nav_col = st.columns([0.6, 0.4])
     with date_col:
@@ -1319,8 +1442,6 @@ def main():
             page_chatbot()
         elif choice == "Daftar Pengingat":
             page_list()
-        elif choice == "Jadwal Pelajaran":
-            page_jadwal_pelajaran()
         elif choice == "Manajemen Kelas":
             page_kelas_management()
         elif choice == "Riwayat":
