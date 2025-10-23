@@ -263,10 +263,10 @@ def navbar():
             styles={
                 "container": {
                     "padding": "0px !important",
-                    "background-color": "transparent",
+                    "background-color": "#6681F2 !important",
                 },
                 "icon": {
-                    "color": "white",
+                    "color": "black",
                     "font-size": "1.2rem"
                 },
                 "nav-link": {
@@ -274,13 +274,14 @@ def navbar():
                     "text-align": "left",
                     "margin": "0px 0px 10px 0px",
                     "padding": "0.75rem 1rem",
-                    "color": "#FFFFFF",
-                    "background-color": "#616161",
+                    "color": "black",
+                    "background-color": "white",
                     "border-radius": "10px",
                     "--hover-color": "#757575", 
                 },
                 "nav-link-selected": {
-                    "background-color": "#424242", 
+                    "background-color": "#424242",
+                    "color": "white",
                 },
             }
         )
@@ -449,134 +450,212 @@ def page_jadwal_pelajaran():
 
 def page_kelas_management():
     user_id = st.session_state["user_info"]["user_id"]
+    # Periksa role ID
+    if "user_role_id" not in st.session_state:
+        with SessionLocal() as db_role_check:
+            st.session_state["user_role_id"] = get_user_role_id(db_role_check, user_id)
     user_role_id = st.session_state.get("user_role_id")
-    is_guru = user_role_id == 2
+    is_guru = user_role_id == 2 # Asumsi ID 2 adalah Guru
 
-    # --- CSS Khusus untuk Halaman Manajemen Kelas ---
+    # --- CSS BARU yang Lebih Stabil ---
     st.markdown("""
     <style>
-        /* ... (CSS tidak berubah) ... */
+        /* Tombol + Buat Kelas */
+        .main-header .stButton>button { /* Target tombol di header utama */
+            background-color: #F0F2F6 !important; color: #31333F !important;
+            border: 1px solid #D7D9DC !important; border-radius: 10px !important;
+            padding: 8px 15px !important; font-weight: bold;
+        }
+        .main-header .stButton>button:hover { background-color: #E0E0E0 !important; }
+
+        /* Judul Halaman */
+        h1#manajemen-kelas { font-size: 2rem; font-weight: bold; margin-bottom: 1.5rem; }
+
+        /* Grid Kartu Kelas */
         .class-grid-container {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
             gap: 20px;
         }
-        .class-card {
-            background-color: #F0F2F6;
-            border-radius: 12px;
+
+        /* Menargetkan st.container YANG KITA JADIKAN KARTU */
+        /* Menggunakan :has() untuk memilih container di dalam grid yang berisi .card-top-content */
+        .class-grid-container > div[data-testid="stVerticalBlock"]:has(.card-top-content) {
+            padding: 0 !important; /* Hapus padding default container */
+            border-radius: 12px !important; /* Sudut bundar untuk kartu */
+            border: 1px solid #E0E0E0 !important;
+            background-color: #F5F5F5 !important; /* Warna dasar abu terang */
             overflow: hidden;
             box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            border: 1px solid #E0E0E0;
+            transition: transform 0.2s ease-in-out;
         }
-        .class-card .card-top {
-            background-color: #616161; color: white; padding: 15px;
+         .class-grid-container > div[data-testid="stVerticalBlock"]:has(.card-top-content):hover {
+             transform: translateY(-5px);
+         }
+
+        /* Bagian Atas Kartu (Gelap) */
+        .card-top-content { /* Menggunakan class ini di st.markdown */
+            background-color: #616161;
+            color: white;
+            padding: 20px;
+            min-height: 120px; /* Sesuaikan tinggi jika perlu */
         }
-        .card-top h5, .card-top p { margin: 0; padding: 0; }
-        .card-top h5 { font-size: 1.1rem; margin-bottom: 5px; }
-        .card-top p { font-size: 0.9rem; opacity: 0.9; }
-        .class-card .card-bottom { padding: 10px 15px; }
-        .class-card .stButton>button { width: 100%; }
-        .detail-header {
-            background-color: #616161; color: white; border-radius: 12px;
-            padding: 2rem; margin-bottom: 2rem;
+        .card-top-content h5 { font-size: 1.2rem; margin: 0 0 8px 0; font-weight: bold; }
+        .card-top-content p { font-size: 0.9rem; opacity: 0.9; margin: 0; }
+
+        /* Tombol Lihat Detail di bagian bawah kartu */
+        .class-grid-container div[data-testid="stVerticalBlock"]:has(.card-top-content) .stButton>button {
+            width: 100%;
+            background-color: #F5F5F5 !important; /* Warna abu terang */
+            color: #424242 !important; /* Warna teks gelap */
+            border: none !important;
+            border-top: 1px solid #E0E0E0 !important; /* Garis pemisah tipis */
+            border-radius: 0 0 12px 12px !important; /* Hanya sudut bawah */
+            padding: 10px 15px !important;
+            text-align: center;
+            font-weight: bold;
+            font-size: 0.9rem;
         }
-        .detail-header h2, .detail-header p { margin: 0; }
-        .announcement-item, .member-item {
-            background-color: #F0F2F6; border-radius: 10px; padding: 15px;
-            margin-bottom: 10px;
+        .class-grid-container div[data-testid="stVerticalBlock"]:has(.card-top-content) .stButton>button:hover {
+            background-color: #E0E0E0 !important; /* Sedikit lebih gelap saat hover */
         }
-        .member-item { display: flex; justify-content: space-between; align-items: center; }
+
+        /* --- Tampilan Detail Kelas (CSS tidak berubah) --- */
+        .detail-header-card { background-color: #616161; color: white; border-radius: 12px; padding: 2rem; margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; }
+        .detail-header-card h2, .detail-header-card p { margin: 0; }
+        .detail-header-card p { opacity: 0.9; }
+        .detail-actions .stButton>button { background-color: #F0F2F6 !important; color: #31333F !important; border: 1px solid #D7D9DC !important; border-radius: 8px !important; }
+        .detail-actions .stButton>button:hover { background-color: #E0E0E0 !important; }
+        .detail-actions .stButton button[kind="primary"] { background-color: #FFCDD2 !important; color: #D32F2F !important; border-color: #FFCDD2 !important; border-radius: 8px !important; }
+        .detail-actions .stButton button[kind="primary"]:hover { background-color: #EF9A9A !important; }
+        /* Pengumuman */
+        .announcement-item { background-color: #F5F5F5; border-radius: 10px; padding: 15px; margin-bottom: 15px; border: 1px solid #E0E0E0; }
+        .announcement-header { display: flex; align-items: center; margin-bottom: 10px; }
+        .announcement-avatar { width: 40px; height: 40px; background-color: #BDBDBD; border-radius: 50%; margin-right: 10px; }
+        .announcement-meta { font-size: 0.9rem; color: #616161; }
+        .announcement-meta b { color: #31333F; display: block; font-size: 1rem; }
+        .announcement-body p { margin: 10px 0 0 0; color: #31333F; }
+        /* Kelola Anggota */
+        div[data-testid="stVerticalBlock"]:has(.member-info) { display: flex !important; align-items: center !important; background-color: #FFFFFF; border-radius: 10px; padding: 10px 15px !important; margin-bottom: 10px; border: 1px solid #E0E0E0; }
+        .member-info { display: flex; align-items: center; flex-grow: 1; }
+        .member-avatar { width: 35px; height: 35px; background-color: #D7D9DC; border-radius: 50%; margin-right: 15px; flex-shrink: 0; }
+        .member-name { font-size: 1rem; color: #31333F; }
+        div[data-testid="stVerticalBlock"]:has(.member-info) .stButton>button { background-color: #424242 !important; color: white !important; border: none !important; border-radius: 20px !important; padding: 5px 15px !important; margin-left: 10px; white-space: nowrap; }
+        div[data-testid="stVerticalBlock"]:has(.member-info) .stButton>button:hover { background-color: #616161 !important; }
+        div[data-testid="stVerticalBlock"]:has(.member-info) > div[data-testid="stHorizontalBlock"] > div:nth-child(2) { padding-top: 0 !important; padding-bottom: 0 !important; display: flex; align-items: center; justify-content: flex-end; flex-grow: 0 !important; flex-shrink: 0 !important; width: auto !important; }
     </style>
     """, unsafe_allow_html=True)
 
-    # State management untuk navigasi
-    if 'class_view' not in st.session_state:
-        st.session_state.class_view = 'main'
-    if 'selected_class_id' not in st.session_state:
-        st.session_state.selected_class_id = None
+    # State management
+    if 'class_view' not in st.session_state: st.session_state.class_view = 'main'
+    if 'selected_class_id' not in st.session_state: st.session_state.selected_class_id = None
+    if 'show_create_form' not in st.session_state: st.session_state.show_create_form = False
 
-    def set_view(view, class_id=None):
-        st.session_state.class_view = view
-        st.session_state.selected_class_id = class_id
+    def set_view(view, class_id=None): st.session_state.class_view = view; st.session_state.selected_class_id = class_id
+    def toggle_create_form(): st.session_state.show_create_form = not st.session_state.get("show_create_form", False)
 
-    def toggle_create_form():
-        st.session_state.show_create_form = not st.session_state.get("show_create_form", False)
-
-    # Tampilan Utama (Grid Kelas)
+    # --- Tampilan Utama (Grid Kelas) ---
     if st.session_state.class_view == 'main':
-        cols = st.columns([0.7, 0.3])
-        with cols[0]:
-            st.header("Manajemen Kelas")
-        with cols[1]:
-            st.button("＋ Buat Kelas", use_container_width=True, on_click=toggle_create_form)
-
-        if st.session_state.get("show_create_form", False):
-            if st.dialog("Buat Kelas Baru"):
-                with st.form("form_buat_kelas_popup", clear_on_submit=True):
-                    nama_kelas = st.text_input("Nama Kelas (Contoh: IPA Kelas X-A)")
-                    wali_kelas = st.text_input("Nama Wali Kelas")
-                    deskripsi = st.text_area("Deskripsi Kelas (Opsional)")
-                    if st.form_submit_button("Buat Kelas", type="primary"):
-                        if nama_kelas and wali_kelas:
-                            with SessionLocal() as db:
-                                success, message = create_new_class(db, user_id, nama_kelas, deskripsi, wali_kelas)
-                                if success:
-                                    st.success(message)
-                                    st.session_state.show_create_form = False
-                                    st.rerun()
-                                else:
-                                    st.error(message)
-                        else:
-                            st.error("Nama Kelas dan Wali Kelas wajib diisi.")
-        
-        st.markdown("---")
-        
-        with SessionLocal() as db:
-            kelas_dibuat = db.query(Kelas).filter(Kelas.id_pembuat == user_id).all()
-        
-        if not kelas_dibuat:
-            st.info("Anda belum membuat kelas. Klik tombol '+ Buat Kelas' untuk memulai.")
-        else:
-            st.markdown('<div class="class-grid-container">', unsafe_allow_html=True)
-            for kelas in kelas_dibuat:
-                st.markdown('<div class="class-card">', unsafe_allow_html=True)
-                st.markdown(f"""
-                    <div class="card-top">
-                        <h5>{kelas.nama_kelas}</h5>
-                        <p>{kelas.wali_kelas}</p>
-                    </div>
-                """, unsafe_allow_html=True)
-                with st.container():
-                    if st.button("Lihat Detail", key=f"detail_{kelas.id_kelas}", on_click=set_view, args=('detail', kelas.id_kelas)):
-                        pass
-                st.markdown('</div>', unsafe_allow_html=True)
+        # Header (Tombol dan Judul)
+        header_cols = st.columns([0.7, 0.3])
+        with header_cols[0]:
+            st.markdown('<h1 id="manajemen-kelas">Manajemen Kelas</h1>', unsafe_allow_html=True)
+        with header_cols[1]:
+            # Beri class agar bisa ditarget CSS
+            st.markdown('<div class="main-header">', unsafe_allow_html=True)
+            st.button("＋ Buat Kelas", key="create_class_button_main", on_click=toggle_create_form)
             st.markdown('</div>', unsafe_allow_html=True)
 
-    # Tampilan Detail Kelas
+        # Form Buat Kelas (pakai expander)
+        if st.session_state.show_create_form:
+            with st.expander("Buat Kelas Baru", expanded=True):
+                 with st.form("form_buat_kelas_expander", clear_on_submit=True):
+                    nama_kelas = st.text_input("Nama Kelas")
+                    wali_kelas = st.text_input("Nama Wali Kelas")
+                    deskripsi = st.text_area("Deskripsi (Opsional)")
+                    submit_col, cancel_col = st.columns(2)
+                    with submit_col:
+                        if st.form_submit_button("Buat Kelas", type="primary", use_container_width=True):
+                            if nama_kelas and wali_kelas:
+                                with SessionLocal() as db: success, message = create_new_class(db, user_id, nama_kelas, deskripsi, wali_kelas)
+                                if success: st.success(message); st.session_state.show_create_form = False; st.rerun()
+                                else: st.error(message)
+                            else: st.error("Nama Kelas dan Wali Kelas wajib diisi.")
+                    with cancel_col:
+                        if st.form_submit_button("Batal", use_container_width=True):
+                            st.session_state.show_create_form = False; st.rerun()
+
+        st.markdown("---")
+        with SessionLocal() as db:
+            kelas_dibuat = db.query(Kelas).filter(Kelas.id_pembuat == user_id).all()
+
+        if not kelas_dibuat: st.info("Anda belum membuat kelas.")
+        else:
+            # Grid Container
+            st.markdown('<div class="class-grid-container">', unsafe_allow_html=True)
+            for kelas in kelas_dibuat:
+                # Gunakan st.container sebagai KARTU
+                with st.container():
+                     # Bagian Atas Kartu (Gelap) - pakai markdown
+                     st.markdown(f"""
+                        <div class="card-top-content">
+                            <h5>{kelas.nama_kelas or '...'}</h5>
+                            <p>{kelas.wali_kelas or '...'}</p>
+                            <p>Kode Kelas : {kelas.kode_kelas}</p>
+                        </div>""", unsafe_allow_html=True)
+                     # Tombol Lihat Detail (di bagian bawah)
+                     st.button("Lihat Detail", key=f"detail_{kelas.id_kelas}", on_click=set_view, args=('detail', kelas.id_kelas), use_container_width=True)
+            st.markdown('</div>', unsafe_allow_html=True) # Penutup per kartu (tidak diperlukan jika st.container di loop)
+            # Penutup Grid Container di luar loop
+            st.markdown('</div>', unsafe_allow_html=True)
+
+    # --- Tampilan Detail Kelas ---
     elif st.session_state.class_view == 'detail':
         class_id = st.session_state.selected_class_id
         with SessionLocal() as db:
             kelas = db.query(Kelas).get(class_id)
-        
-        c1, c2 = st.columns([0.7, 0.3])
-        with c1:
-            if st.button("← Kembali", on_click=set_view, args=('main',)):
-                pass
+            if not kelas: # Fallback jika kelas tidak ditemukan
+                st.error("Kelas tidak ditemukan.")
+                set_view('main'); st.rerun()
+
+        # Header Tombol Aksi
+        st.markdown('<div class="detail-actions">', unsafe_allow_html=True)
+        c1, _, c2 = st.columns([0.2, 0.6, 0.2]) # Kolom kosong untuk jarak
+        with c1: st.button("← Kembali", on_click=set_view, args=('main',), use_container_width=True)
         with c2:
-            if st.button("Hapus Kelas", type="primary", use_container_width=True):
-                with SessionLocal() as db:
-                    db.query(AnggotaKelas).filter(AnggotaKelas.id_kelas == class_id).delete()
-                    db.query(Pengingat).filter(Pengingat.id_kelas == class_id).delete()
-                    db.delete(kelas)
-                    db.commit()
-                st.success(f"Kelas '{kelas.nama_kelas}' berhasil dihapus.")
-                set_view('main')
-                st.rerun()
-        
+             # Konfirmasi Hapus
+             if f"confirm_delete_{class_id}" not in st.session_state:
+                 st.session_state[f"confirm_delete_{class_id}"] = False
+
+             if st.session_state[f"confirm_delete_{class_id}"]:
+                 st.warning(f"Yakin ingin menghapus kelas '{kelas.nama_kelas}'?")
+                 del_c1, del_c2 = st.columns(2)
+                 if del_c1.button("Ya, Hapus", key=f"del_confirm_{class_id}", type="primary", use_container_width=True):
+                     with SessionLocal() as db:
+                         # Hapus data terkait
+                         db.query(AnggotaKelas).filter(AnggotaKelas.id_kelas == class_id).delete()
+                         db.query(PenerimaPengingat).join(Pengingat).filter(Pengingat.id_kelas == class_id).delete(synchronize_session=False)
+                         db.query(Pengingat).filter(Pengingat.id_kelas == class_id).delete()
+                         db.delete(kelas)
+                         db.commit()
+                     st.success(f"Kelas '{kelas.nama_kelas}' berhasil dihapus.")
+                     st.session_state[f"confirm_delete_{class_id}"] = False # Reset state
+                     set_view('main'); st.rerun()
+                 if del_c2.button("Batal", key=f"del_cancel_{class_id}", use_container_width=True):
+                     st.session_state[f"confirm_delete_{class_id}"] = False
+                     st.rerun()
+             else:
+                 if st.button("Hapus Kelas", key=f"del_init_{class_id}", use_container_width=True):
+                     st.session_state[f"confirm_delete_{class_id}"] = True
+                     st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
+
         st.markdown(f"""
-            <div class="detail-header">
-                <h2>{kelas.nama_kelas}</h2>
-                <p>Wali Kelas: {kelas.wali_kelas}</p>
+            <div class="detail-header-card">
+                <div>
+                    <h2>{kelas.nama_kelas or 'Nama Kelas'}</h2>
+                    <p>Wali Kelas: {kelas.wali_kelas or '...'}</p>
+                </div>
             </div>
         """, unsafe_allow_html=True)
 
@@ -587,8 +666,8 @@ def page_kelas_management():
             with st.form("form_new_announcement", clear_on_submit=True):
                 judul = st.text_input("Judul Pengumuman")
                 deskripsi = st.text_area("Isi Pengumuman")
-                tanggal = st.date_input("Tanggal Terkait (Opsional)")
-                jam = st.time_input("Jam Terkait (Opsional)")
+                tanggal = st.date_input("Tanggal Terkait")
+                jam = st.time_input("Jam Terkait")
                 if st.form_submit_button("Kirim Pengumuman", type="primary"):
                     with SessionLocal() as db:
                         new_pengingat = Pengingat(
@@ -605,54 +684,76 @@ def page_kelas_management():
                         st.rerun()
             
             st.markdown("---")
-            st.subheader("Daftar Pengumuman Terkirim")
             with SessionLocal() as db:
-                pengumuman_list = db.query(Pengingat).filter(Pengingat.id_kelas == class_id).order_by(Pengingat.dibuat_pada.desc()).all()
-            
-            if not pengumuman_list:
+                # Mengambil Pengingat DAN nama pembuatnya (Pengguna)
+                pengumuman_list_with_creator = db.query(
+                    Pengingat, 
+                    Pengguna.nama_lengkap.label('nama_pembuat') 
+                ).join(
+                    Pengguna, Pengingat.id_pembuat == Pengguna.id_pengguna
+                ).filter(
+                    Pengingat.id_kelas == class_id
+                ).order_by(
+                    Pengingat.tanggal_deadline.desc()
+                ).all()
+            # ------------------------
+
+            if not pengumuman_list_with_creator:
                 st.info("Belum ada pengumuman di kelas ini.")
             else:
-                for p in pengumuman_list:
-                    # --- PERBAIKAN DI SINI ---
-                    # Cek dulu apakah p.dibuat_pada ada isinya atau tidak
-                    if p.dibuat_pada:
-                        timestamp_str = p.dibuat_pada.strftime('%d %b %Y, %H:%M')
+                # --- PERBAIKAN CARA MENAMPILKAN ---
+                for pengingat, nama_pembuat in pengumuman_list_with_creator:
+                    # Cek tanggal dibuat
+                    if pengingat.tanggal_deadline:
+                        timestamp_str = pengingat.tanggal_deadline.strftime('%d %b %Y')
                     else:
-                        timestamp_str = "Waktu tidak tercatat" # Teks pengganti jika tanggal kosong
-                    # ---------------------------
+                        timestamp_str = "Waktu tidak tercatat" 
 
                     st.markdown(f"""
                         <div class="announcement-item">
-                            <b>{p.judul}</b>
-                            <p>{p.deskripsi}</p>
-                            <small>Diposting pada {timestamp_str}</small>
+                            <div class="announcement-header">
+                                <div class="announcement-avatar"></div> 
+                                <div class="announcement-meta">
+                                    <b>{nama_pembuat}</b> 
+                                    Diposting pada {timestamp_str}
+                                </div>
+                            </div>
+                            <div class="announcement-body">
+                                <p>{pengingat.deskripsi}</p> 
+                            </div>
                         </div>
                     """, unsafe_allow_html=True)
 
-        with tab2:
-            st.subheader("Daftar Anggota Kelas")
+        with tab2: # Tab Kelola Anggota
             with SessionLocal() as db:
                 anggota_list = db.query(Pengguna, AnggotaKelas).join(AnggotaKelas, AnggotaKelas.id_pengguna == Pengguna.id_pengguna).filter(AnggotaKelas.id_kelas == class_id).all()
 
-            if not anggota_list:
-                st.info("Belum ada anggota di kelas ini.")
+            if not any(a for p, a in anggota_list if p.id_pengguna != user_id):
+                st.info("Belum ada anggota di kelas ini (selain Anda).")
             else:
                 for pengguna, anggota in anggota_list:
-                    if pengguna.id_pengguna == user_id: continue
-                    
-                    st.markdown(f"""
-                        <div class="member-item">
-                            <span>{pengguna.nama_lengkap} ({pengguna.email})</span>
-                        </div>
-                    """, unsafe_allow_html=True)
-                    if st.button("Keluarkan", key=f"kick_{anggota.id_anggota_kelas}"):
-                        with SessionLocal() as db:
-                            db.delete(anggota)
-                            db.commit()
-                        st.success(f"Anggota {pengguna.nama_lengkap} berhasil dikeluarkan.")
-                        st.rerun()
+                    if pengguna.id_pengguna == user_id: continue 
+                    with st.container():
+                        col_info, col_btn = st.columns([0.8, 0.2]) 
+                        with col_info:
+                            st.markdown(f"""
+                                <div class="member-info">
+                                    <div class="member-avatar"></div>
+                                    <span class="member-name">{pengguna.nama_lengkap}</span>
+                                </div>
+                            """, unsafe_allow_html=True)
 
-        st.markdown("---")
+                        with col_btn:
+                            # Tempatkan tombol di kolom kedua
+                            if st.button("Hapus Siswa", key=f"kick_{anggota.id_anggota_kelas}"):
+                                with SessionLocal() as db_del:
+                                    anggota_to_delete = db_del.query(AnggotaKelas).get(anggota.id_anggota_kelas)
+                                    if anggota_to_delete:
+                                        db_del.delete(anggota_to_delete)
+                                        db_del.commit()
+                                        st.success(f"Anggota {pengguna.nama_lengkap} berhasil dikeluarkan.")
+                                        st.rerun()
+                st.markdown('</div>', unsafe_allow_html=True)
     
     # ----------------------------------------------------
     # --- BAGIAN 2: Fungsionalitas Siswa (Bergabung & Lihat) ---
@@ -660,7 +761,7 @@ def page_kelas_management():
     
     # Form Bergabung Kelas - HANYA DITAMPILKAN JIKA BUKAN GURU
     if not is_guru: 
-        st.markdown("### 🧑‍🎓 Kelas Anda")
+        st.markdown("### Kelas Anda")
         with st.container(border=True):
             st.subheader("Bergabung dengan Kelas Baru")
             
@@ -1275,7 +1376,7 @@ def page_riwayat_terpadu():
         
 def page_settings():
     user_id = st.session_state["user_info"]["user_id"]
-    st.header("⚙️ Pengaturan Akun")
+    st.header("Pengaturan Akun")
     user_info = st.session_state.get("user_info", {})
 
     with st.container(border=True):
@@ -1330,51 +1431,13 @@ def main():
     st.set_page_config(page_title="Chatbot Reminder", page_icon="⏰", layout="centered")
     st.markdown("""
     <style>
-        /* Menata panel sidebar utama */
-        [data-testid="stSidebar"] > div:first-child {
-            background-color: #E0E0E0;
-            padding: 1.5rem 1rem;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-        }
-
-        [data-testid="stSidebar"] ul {
-            display: flex;
-            flex-direction: column;
-            flex-grow: 1;
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-
-        [data-testid="stSidebar"] ul li:nth-last-child(2) {
-            margin-top: auto;
-        }
-
-        div[data-testid="stExpander"] {
-            border-radius: 12px !important;
-            border: 1px solid #E0E0E0 !important;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05) !important;
-        }
-        div[data-testid="stExpander"] > details > summary {
-            font-size: 1.1rem !important;
-        }
-
-        .block-container {
-            padding-top: 2rem !important;
-        }
-
-        /* Menyesuaikan tampilan st.expander secara global */
-        div[data-testid="stExpander"] {
-            border-radius: 12px !important;
-            border: 1px solid #E0E0E0 !important;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05) !important;
-            margin-bottom: 1rem;
-        }
-        div[data-testid="stExpander"] > details > summary {
-            font-size: 1.1rem !important;
-        }
+        /* --- Sidebar & Global --- */
+        [data-testid="stSidebar"] > div:first-child { background-color: #6681F2 !important; padding: 1.5rem 1rem; display: flex; flex-direction: column; height: 100vh; }
+        [data-testid="stSidebar"] ul { display: flex; flex-direction: column; flex-grow: 1; list-style: none; padding: 0; margin: 0; }
+        [data-testid="stSidebar"] ul li:nth-last-child(2) { margin-top: auto; }
+        div[data-testid="stExpander"] { border-radius: 12px !important; border: 1px solid #E0E0E0 !important; box-shadow: 0 4px 6px rgba(0,0,0,0.05) !important; margin-bottom: 1rem;}
+        div[data-testid="stExpander"] > details > summary { font-size: 1.1rem !important; }
+        .block-container { padding-top: 2rem !important; }
     </style>
     """, unsafe_allow_html=True)
   
