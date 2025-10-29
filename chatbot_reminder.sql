@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 5.2.1
+-- version 5.2.3
 -- https://www.phpmyadmin.net/
 --
--- Host: 127.0.0.1
--- Generation Time: Oct 23, 2025 at 05:44 PM
--- Server version: 10.4.32-MariaDB
--- PHP Version: 8.2.12
+-- Host: localhost
+-- Waktu pembuatan: 27 Okt 2025 pada 01.22
+-- Versi server: 10.3.39-MariaDB
+-- Versi PHP: 7.2.24
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -18,13 +18,13 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Database: `chatbot_reminder`
+-- Basis data: `chatbot_reminder`
 --
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `anggota_kelas`
+-- Struktur dari tabel `anggota_kelas`
 --
 
 CREATE TABLE `anggota_kelas` (
@@ -34,7 +34,7 @@ CREATE TABLE `anggota_kelas` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `anggota_kelas`
+-- Dumping data untuk tabel `anggota_kelas`
 --
 
 INSERT INTO `anggota_kelas` (`id_anggota_kelas`, `id_kelas`, `id_pengguna`) VALUES
@@ -47,7 +47,7 @@ INSERT INTO `anggota_kelas` (`id_anggota_kelas`, `id_kelas`, `id_pengguna`) VALU
 -- --------------------------------------------------------
 
 --
--- Table structure for table `arsip_pengingat`
+-- Struktur dari tabel `arsip_pengingat`
 --
 
 CREATE TABLE `arsip_pengingat` (
@@ -59,7 +59,7 @@ CREATE TABLE `arsip_pengingat` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `jadwal_pelajaran`
+-- Struktur dari tabel `jadwal_pelajaran`
 --
 
 CREATE TABLE `jadwal_pelajaran` (
@@ -72,7 +72,7 @@ CREATE TABLE `jadwal_pelajaran` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `jadwal_pelajaran`
+-- Dumping data untuk tabel `jadwal_pelajaran`
 --
 
 INSERT INTO `jadwal_pelajaran` (`id_jadwal`, `id_pengguna`, `hari`, `nama_pelajaran`, `jam_mulai`, `jam_selesai`) VALUES
@@ -86,7 +86,7 @@ INSERT INTO `jadwal_pelajaran` (`id_jadwal`, `id_pengguna`, `hari`, `nama_pelaja
 -- --------------------------------------------------------
 
 --
--- Table structure for table `kelas`
+-- Struktur dari tabel `kelas`
 --
 
 CREATE TABLE `kelas` (
@@ -99,7 +99,7 @@ CREATE TABLE `kelas` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `kelas`
+-- Dumping data untuk tabel `kelas`
 --
 
 INSERT INTO `kelas` (`id_kelas`, `nama_kelas`, `wali_kelas`, `deskripsi`, `id_pembuat`, `kode_kelas`) VALUES
@@ -110,7 +110,7 @@ INSERT INTO `kelas` (`id_kelas`, `nama_kelas`, `wali_kelas`, `deskripsi`, `id_pe
 -- --------------------------------------------------------
 
 --
--- Table structure for table `lampiran_pengingat`
+-- Struktur dari tabel `lampiran_pengingat`
 --
 
 CREATE TABLE `lampiran_pengingat` (
@@ -122,7 +122,7 @@ CREATE TABLE `lampiran_pengingat` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `notifikasi`
+-- Struktur dari tabel `notifikasi`
 --
 
 CREATE TABLE `notifikasi` (
@@ -135,7 +135,7 @@ CREATE TABLE `notifikasi` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `notifikasi`
+-- Dumping data untuk tabel `notifikasi`
 --
 
 INSERT INTO `notifikasi` (`id_notifikasi`, `id_pengguna`, `id_pengingat`, `metode`, `waktu_kirim`, `status`) VALUES
@@ -159,7 +159,7 @@ INSERT INTO `notifikasi` (`id_notifikasi`, `id_pengguna`, `id_pengingat`, `metod
 -- --------------------------------------------------------
 
 --
--- Table structure for table `penerima_pengingat`
+-- Struktur dari tabel `penerima_pengingat`
 --
 
 CREATE TABLE `penerima_pengingat` (
@@ -170,7 +170,7 @@ CREATE TABLE `penerima_pengingat` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `penerima_pengingat`
+-- Dumping data untuk tabel `penerima_pengingat`
 --
 
 INSERT INTO `penerima_pengingat` (`id_penerima`, `id_pengingat`, `id_pengguna`, `status_pengiriman`) VALUES
@@ -195,7 +195,7 @@ INSERT INTO `penerima_pengingat` (`id_penerima`, `id_pengingat`, `id_pengguna`, 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `pengguna`
+-- Struktur dari tabel `pengguna`
 --
 
 CREATE TABLE `pengguna` (
@@ -211,7 +211,7 @@ CREATE TABLE `pengguna` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `pengguna`
+-- Dumping data untuk tabel `pengguna`
 --
 
 INSERT INTO `pengguna` (`id_pengguna`, `id_peran`, `nama_lengkap`, `email`, `kata_sandi_hash`, `foto_profil`, `tanggal_dibuat`, `terakhir_login`, `verifikasi_email`) VALUES
@@ -223,10 +223,24 @@ INSERT INTO `pengguna` (`id_pengguna`, `id_peran`, `nama_lengkap`, `email`, `kat
 (6, 2, '23-078 HAJJID RAFI MUMTAZ', 'rafimumtaz86@gmail.com', NULL, NULL, '2025-10-15 12:25:20', NULL, 1),
 (7, 3, '23-078 HAJJID RAFI MUMTAZ', '230411100078@student.trunojoyo.ac.id', NULL, NULL, '2025-10-15 12:28:21', NULL, 1);
 
+--
+-- Trigger `pengguna`
+--
+DELIMITER $$
+CREATE TRIGGER `set_guru_role_before_insert` BEFORE INSERT ON `pengguna` FOR EACH ROW BEGIN
+    -- Cek jika email baru berakhiran dengan @guru.belajar.id
+    IF NEW.email LIKE '%@guru.belajar.id' THEN
+        -- Set id_peran menjadi 2 (ID untuk peran Guru)
+        SET NEW.id_peran = 2;
+    END IF;
+END
+$$
+DELIMITER ;
+
 -- --------------------------------------------------------
 
 --
--- Table structure for table `pengingat`
+-- Struktur dari tabel `pengingat`
 --
 
 CREATE TABLE `pengingat` (
@@ -245,7 +259,7 @@ CREATE TABLE `pengingat` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `pengingat`
+-- Dumping data untuk tabel `pengingat`
 --
 
 INSERT INTO `pengingat` (`id_pengingat`, `id_pembuat`, `id_kelas`, `judul`, `deskripsi`, `tipe`, `tanggal_deadline`, `jam_deadline`, `berulang`, `status_pengiriman`, `dibuat_pada`, `diubah_pada`) VALUES
@@ -267,7 +281,7 @@ INSERT INTO `pengingat` (`id_pengingat`, `id_pembuat`, `id_kelas`, `judul`, `des
 (57, 6, 6, 'Besok Akan ada ujian tertulis', 'besok akan ada ujian tertulis, silahkan siapkan alat tulis dan kertas hvs A4', 'Pengumuman', '2025-10-22', '19:35:00', 0, 'terkirim', NULL, NULL);
 
 --
--- Triggers `pengingat`
+-- Trigger `pengingat`
 --
 DELIMITER $$
 CREATE TRIGGER `log_delete_pengingat_rev` AFTER DELETE ON `pengingat` FOR EACH ROW BEGIN
@@ -306,7 +320,7 @@ DELIMITER ;
 -- --------------------------------------------------------
 
 --
--- Table structure for table `pengingat_tag`
+-- Struktur dari tabel `pengingat_tag`
 --
 
 CREATE TABLE `pengingat_tag` (
@@ -317,7 +331,7 @@ CREATE TABLE `pengingat_tag` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `peran`
+-- Struktur dari tabel `peran`
 --
 
 CREATE TABLE `peran` (
@@ -326,7 +340,7 @@ CREATE TABLE `peran` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `peran`
+-- Dumping data untuk tabel `peran`
 --
 
 INSERT INTO `peran` (`id_peran`, `nama_peran`) VALUES
@@ -337,7 +351,7 @@ INSERT INTO `peran` (`id_peran`, `nama_peran`) VALUES
 -- --------------------------------------------------------
 
 --
--- Table structure for table `pesan_chatbot`
+-- Struktur dari tabel `pesan_chatbot`
 --
 
 CREATE TABLE `pesan_chatbot` (
@@ -351,7 +365,7 @@ CREATE TABLE `pesan_chatbot` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `riwayat_aktivitas`
+-- Struktur dari tabel `riwayat_aktivitas`
 --
 
 CREATE TABLE `riwayat_aktivitas` (
@@ -363,7 +377,7 @@ CREATE TABLE `riwayat_aktivitas` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `riwayat_aktivitas`
+-- Dumping data untuk tabel `riwayat_aktivitas`
 --
 
 INSERT INTO `riwayat_aktivitas` (`id_aktivitas`, `id_pengguna`, `jenis_aktivitas`, `deskripsi`, `waktu`) VALUES
@@ -436,7 +450,7 @@ INSERT INTO `riwayat_aktivitas` (`id_aktivitas`, `id_pengguna`, `jenis_aktivitas
 -- --------------------------------------------------------
 
 --
--- Table structure for table `riwayat_pengingat`
+-- Struktur dari tabel `riwayat_pengingat`
 --
 
 CREATE TABLE `riwayat_pengingat` (
@@ -450,7 +464,7 @@ CREATE TABLE `riwayat_pengingat` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `sesi_chatbot`
+-- Struktur dari tabel `sesi_chatbot`
 --
 
 CREATE TABLE `sesi_chatbot` (
@@ -462,7 +476,7 @@ CREATE TABLE `sesi_chatbot` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `tag`
+-- Struktur dari tabel `tag`
 --
 
 CREATE TABLE `tag` (
@@ -471,11 +485,11 @@ CREATE TABLE `tag` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Indexes for dumped tables
+-- Indeks untuk tabel yang dibuang
 --
 
 --
--- Indexes for table `anggota_kelas`
+-- Indeks untuk tabel `anggota_kelas`
 --
 ALTER TABLE `anggota_kelas`
   ADD PRIMARY KEY (`id_anggota_kelas`),
@@ -483,21 +497,21 @@ ALTER TABLE `anggota_kelas`
   ADD KEY `id_pengguna` (`id_pengguna`);
 
 --
--- Indexes for table `arsip_pengingat`
+-- Indeks untuk tabel `arsip_pengingat`
 --
 ALTER TABLE `arsip_pengingat`
   ADD PRIMARY KEY (`id_arsip`),
   ADD KEY `id_pengingat` (`id_pengingat`);
 
 --
--- Indexes for table `jadwal_pelajaran`
+-- Indeks untuk tabel `jadwal_pelajaran`
 --
 ALTER TABLE `jadwal_pelajaran`
   ADD PRIMARY KEY (`id_jadwal`),
   ADD KEY `id_pengguna` (`id_pengguna`);
 
 --
--- Indexes for table `kelas`
+-- Indeks untuk tabel `kelas`
 --
 ALTER TABLE `kelas`
   ADD PRIMARY KEY (`id_kelas`),
@@ -505,14 +519,14 @@ ALTER TABLE `kelas`
   ADD KEY `fk_kelas_pembuat` (`id_pembuat`);
 
 --
--- Indexes for table `lampiran_pengingat`
+-- Indeks untuk tabel `lampiran_pengingat`
 --
 ALTER TABLE `lampiran_pengingat`
   ADD PRIMARY KEY (`id_lampiran`),
   ADD KEY `id_pengingat` (`id_pengingat`);
 
 --
--- Indexes for table `notifikasi`
+-- Indeks untuk tabel `notifikasi`
 --
 ALTER TABLE `notifikasi`
   ADD PRIMARY KEY (`id_notifikasi`),
@@ -520,7 +534,7 @@ ALTER TABLE `notifikasi`
   ADD KEY `id_pengingat` (`id_pengingat`);
 
 --
--- Indexes for table `penerima_pengingat`
+-- Indeks untuk tabel `penerima_pengingat`
 --
 ALTER TABLE `penerima_pengingat`
   ADD PRIMARY KEY (`id_penerima`),
@@ -528,7 +542,7 @@ ALTER TABLE `penerima_pengingat`
   ADD KEY `id_pengguna` (`id_pengguna`);
 
 --
--- Indexes for table `pengguna`
+-- Indeks untuk tabel `pengguna`
 --
 ALTER TABLE `pengguna`
   ADD PRIMARY KEY (`id_pengguna`),
@@ -536,7 +550,7 @@ ALTER TABLE `pengguna`
   ADD KEY `id_peran` (`id_peran`);
 
 --
--- Indexes for table `pengingat`
+-- Indeks untuk tabel `pengingat`
 --
 ALTER TABLE `pengingat`
   ADD PRIMARY KEY (`id_pengingat`),
@@ -544,235 +558,235 @@ ALTER TABLE `pengingat`
   ADD KEY `id_kelas` (`id_kelas`);
 
 --
--- Indexes for table `pengingat_tag`
+-- Indeks untuk tabel `pengingat_tag`
 --
 ALTER TABLE `pengingat_tag`
   ADD PRIMARY KEY (`id_pengingat`,`id_tag`),
   ADD KEY `id_tag` (`id_tag`);
 
 --
--- Indexes for table `peran`
+-- Indeks untuk tabel `peran`
 --
 ALTER TABLE `peran`
   ADD PRIMARY KEY (`id_peran`);
 
 --
--- Indexes for table `pesan_chatbot`
+-- Indeks untuk tabel `pesan_chatbot`
 --
 ALTER TABLE `pesan_chatbot`
   ADD PRIMARY KEY (`id_pesan`),
   ADD KEY `id_sesi` (`id_sesi`);
 
 --
--- Indexes for table `riwayat_aktivitas`
+-- Indeks untuk tabel `riwayat_aktivitas`
 --
 ALTER TABLE `riwayat_aktivitas`
   ADD PRIMARY KEY (`id_aktivitas`),
   ADD KEY `id_pengguna` (`id_pengguna`);
 
 --
--- Indexes for table `riwayat_pengingat`
+-- Indeks untuk tabel `riwayat_pengingat`
 --
 ALTER TABLE `riwayat_pengingat`
   ADD PRIMARY KEY (`id_riwayat`),
   ADD KEY `id_pengingat` (`id_pengingat`);
 
 --
--- Indexes for table `sesi_chatbot`
+-- Indeks untuk tabel `sesi_chatbot`
 --
 ALTER TABLE `sesi_chatbot`
   ADD PRIMARY KEY (`id_sesi`),
   ADD KEY `id_pengguna` (`id_pengguna`);
 
 --
--- Indexes for table `tag`
+-- Indeks untuk tabel `tag`
 --
 ALTER TABLE `tag`
   ADD PRIMARY KEY (`id_tag`);
 
 --
--- AUTO_INCREMENT for dumped tables
+-- AUTO_INCREMENT untuk tabel yang dibuang
 --
 
 --
--- AUTO_INCREMENT for table `anggota_kelas`
+-- AUTO_INCREMENT untuk tabel `anggota_kelas`
 --
 ALTER TABLE `anggota_kelas`
   MODIFY `id_anggota_kelas` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
 
 --
--- AUTO_INCREMENT for table `arsip_pengingat`
+-- AUTO_INCREMENT untuk tabel `arsip_pengingat`
 --
 ALTER TABLE `arsip_pengingat`
   MODIFY `id_arsip` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `jadwal_pelajaran`
+-- AUTO_INCREMENT untuk tabel `jadwal_pelajaran`
 --
 ALTER TABLE `jadwal_pelajaran`
   MODIFY `id_jadwal` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
--- AUTO_INCREMENT for table `kelas`
+-- AUTO_INCREMENT untuk tabel `kelas`
 --
 ALTER TABLE `kelas`
   MODIFY `id_kelas` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
--- AUTO_INCREMENT for table `lampiran_pengingat`
+-- AUTO_INCREMENT untuk tabel `lampiran_pengingat`
 --
 ALTER TABLE `lampiran_pengingat`
   MODIFY `id_lampiran` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `notifikasi`
+-- AUTO_INCREMENT untuk tabel `notifikasi`
 --
 ALTER TABLE `notifikasi`
   MODIFY `id_notifikasi` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=113;
 
 --
--- AUTO_INCREMENT for table `penerima_pengingat`
+-- AUTO_INCREMENT untuk tabel `penerima_pengingat`
 --
 ALTER TABLE `penerima_pengingat`
   MODIFY `id_penerima` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=66;
 
 --
--- AUTO_INCREMENT for table `pengguna`
+-- AUTO_INCREMENT untuk tabel `pengguna`
 --
 ALTER TABLE `pengguna`
   MODIFY `id_pengguna` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
--- AUTO_INCREMENT for table `pengingat`
+-- AUTO_INCREMENT untuk tabel `pengingat`
 --
 ALTER TABLE `pengingat`
   MODIFY `id_pengingat` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=58;
 
 --
--- AUTO_INCREMENT for table `peran`
+-- AUTO_INCREMENT untuk tabel `peran`
 --
 ALTER TABLE `peran`
   MODIFY `id_peran` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
--- AUTO_INCREMENT for table `pesan_chatbot`
+-- AUTO_INCREMENT untuk tabel `pesan_chatbot`
 --
 ALTER TABLE `pesan_chatbot`
   MODIFY `id_pesan` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `riwayat_aktivitas`
+-- AUTO_INCREMENT untuk tabel `riwayat_aktivitas`
 --
 ALTER TABLE `riwayat_aktivitas`
   MODIFY `id_aktivitas` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=66;
 
 --
--- AUTO_INCREMENT for table `riwayat_pengingat`
+-- AUTO_INCREMENT untuk tabel `riwayat_pengingat`
 --
 ALTER TABLE `riwayat_pengingat`
   MODIFY `id_riwayat` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `sesi_chatbot`
+-- AUTO_INCREMENT untuk tabel `sesi_chatbot`
 --
 ALTER TABLE `sesi_chatbot`
   MODIFY `id_sesi` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `tag`
+-- AUTO_INCREMENT untuk tabel `tag`
 --
 ALTER TABLE `tag`
   MODIFY `id_tag` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- Constraints for dumped tables
+-- Ketidakleluasaan untuk tabel pelimpahan (Dumped Tables)
 --
 
 --
--- Constraints for table `anggota_kelas`
+-- Ketidakleluasaan untuk tabel `anggota_kelas`
 --
 ALTER TABLE `anggota_kelas`
   ADD CONSTRAINT `anggota_kelas_ibfk_1` FOREIGN KEY (`id_kelas`) REFERENCES `kelas` (`id_kelas`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `anggota_kelas_ibfk_2` FOREIGN KEY (`id_pengguna`) REFERENCES `pengguna` (`id_pengguna`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
--- Constraints for table `arsip_pengingat`
+-- Ketidakleluasaan untuk tabel `arsip_pengingat`
 --
 ALTER TABLE `arsip_pengingat`
   ADD CONSTRAINT `arsip_pengingat_ibfk_1` FOREIGN KEY (`id_pengingat`) REFERENCES `pengingat` (`id_pengingat`);
 
 --
--- Constraints for table `jadwal_pelajaran`
+-- Ketidakleluasaan untuk tabel `jadwal_pelajaran`
 --
 ALTER TABLE `jadwal_pelajaran`
   ADD CONSTRAINT `jadwal_pelajaran_ibfk_1` FOREIGN KEY (`id_pengguna`) REFERENCES `pengguna` (`id_pengguna`);
 
 --
--- Constraints for table `kelas`
+-- Ketidakleluasaan untuk tabel `kelas`
 --
 ALTER TABLE `kelas`
   ADD CONSTRAINT `fk_kelas_pembuat` FOREIGN KEY (`id_pembuat`) REFERENCES `pengguna` (`id_pengguna`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
--- Constraints for table `lampiran_pengingat`
+-- Ketidakleluasaan untuk tabel `lampiran_pengingat`
 --
 ALTER TABLE `lampiran_pengingat`
   ADD CONSTRAINT `lampiran_pengingat_ibfk_1` FOREIGN KEY (`id_pengingat`) REFERENCES `pengingat` (`id_pengingat`);
 
 --
--- Constraints for table `notifikasi`
+-- Ketidakleluasaan untuk tabel `notifikasi`
 --
 ALTER TABLE `notifikasi`
   ADD CONSTRAINT `notifikasi_ibfk_1` FOREIGN KEY (`id_pengguna`) REFERENCES `pengguna` (`id_pengguna`),
   ADD CONSTRAINT `notifikasi_ibfk_2` FOREIGN KEY (`id_pengingat`) REFERENCES `pengingat` (`id_pengingat`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
--- Constraints for table `penerima_pengingat`
+-- Ketidakleluasaan untuk tabel `penerima_pengingat`
 --
 ALTER TABLE `penerima_pengingat`
   ADD CONSTRAINT `penerima_pengingat_ibfk_1` FOREIGN KEY (`id_pengingat`) REFERENCES `pengingat` (`id_pengingat`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `penerima_pengingat_ibfk_2` FOREIGN KEY (`id_pengguna`) REFERENCES `pengguna` (`id_pengguna`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
--- Constraints for table `pengguna`
+-- Ketidakleluasaan untuk tabel `pengguna`
 --
 ALTER TABLE `pengguna`
   ADD CONSTRAINT `pengguna_ibfk_1` FOREIGN KEY (`id_peran`) REFERENCES `peran` (`id_peran`);
 
 --
--- Constraints for table `pengingat`
+-- Ketidakleluasaan untuk tabel `pengingat`
 --
 ALTER TABLE `pengingat`
   ADD CONSTRAINT `pengingat_ibfk_1` FOREIGN KEY (`id_pembuat`) REFERENCES `pengguna` (`id_pengguna`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `pengingat_ibfk_2` FOREIGN KEY (`id_kelas`) REFERENCES `kelas` (`id_kelas`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
--- Constraints for table `pengingat_tag`
+-- Ketidakleluasaan untuk tabel `pengingat_tag`
 --
 ALTER TABLE `pengingat_tag`
   ADD CONSTRAINT `pengingat_tag_ibfk_1` FOREIGN KEY (`id_pengingat`) REFERENCES `pengingat` (`id_pengingat`),
   ADD CONSTRAINT `pengingat_tag_ibfk_2` FOREIGN KEY (`id_tag`) REFERENCES `tag` (`id_tag`);
 
 --
--- Constraints for table `pesan_chatbot`
+-- Ketidakleluasaan untuk tabel `pesan_chatbot`
 --
 ALTER TABLE `pesan_chatbot`
   ADD CONSTRAINT `pesan_chatbot_ibfk_1` FOREIGN KEY (`id_sesi`) REFERENCES `sesi_chatbot` (`id_sesi`);
 
 --
--- Constraints for table `riwayat_aktivitas`
+-- Ketidakleluasaan untuk tabel `riwayat_aktivitas`
 --
 ALTER TABLE `riwayat_aktivitas`
   ADD CONSTRAINT `riwayat_aktivitas_ibfk_1` FOREIGN KEY (`id_pengguna`) REFERENCES `pengguna` (`id_pengguna`);
 
 --
--- Constraints for table `riwayat_pengingat`
+-- Ketidakleluasaan untuk tabel `riwayat_pengingat`
 --
 ALTER TABLE `riwayat_pengingat`
   ADD CONSTRAINT `riwayat_pengingat_ibfk_1` FOREIGN KEY (`id_pengingat`) REFERENCES `pengingat` (`id_pengingat`);
 
 --
--- Constraints for table `sesi_chatbot`
+-- Ketidakleluasaan untuk tabel `sesi_chatbot`
 --
 ALTER TABLE `sesi_chatbot`
   ADD CONSTRAINT `sesi_chatbot_ibfk_1` FOREIGN KEY (`id_pengguna`) REFERENCES `pengguna` (`id_pengguna`);
